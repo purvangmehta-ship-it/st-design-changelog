@@ -6,6 +6,7 @@
 <title>ST Design Changelog</title>
 <link href="https://fonts.cdnfonts.com/css/avenir-next" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -118,7 +119,22 @@
   .sync-dot.syncing { background: var(--orange); animation: pulse 1s ease-in-out infinite; }
   .sync-dot.error { background: var(--red); }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  input[type="date"] { font-family: 'Avenir Next', sans-serif; font-size: 13px; font-weight: 500; color: var(--black); background: transparent; border: none; outline: none; cursor: pointer; letter-spacing: -0.01em; padding: 0; width: auto; }
+  input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; }
+  .date-filter-input { font-size: 12px; color: var(--grey1); width: 110px; }
+  .cat-manage-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 0.5px solid var(--grey4); }
+  .cat-manage-row:last-child { border-bottom: none; }
+  .cat-manage-name { flex: 1; font-size: 14px; font-weight: 500; color: var(--black); }
+  .cat-manage-del { width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid var(--grey3); background: var(--white); color: var(--grey2); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; transition: all 0.15s; flex-shrink: 0; }
+  .cat-manage-del:hover { background: var(--light-red); color: var(--dark-red); border-color: var(--red); }
+  .cat-add-row { display: flex; gap: 8px; margin-top: 12px; }
+  .cat-add-row input { flex: 1; }
+  .modal-scroll { max-height: 320px; overflow-y: auto; }
+  @media print { .topbar, .form-panel, .filter-bar, .entry-actions, .feed-stats { display: none !important; } }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .cat-option { padding: 9px 14px; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--black); transition: background 0.1s; }
+  .cat-option:hover { background: var(--grey5); }
+  .cat-option strong { color: var(--blue); font-weight: 700; }
 
   @media (max-width: 900px) {
     .app-layout { grid-template-columns: 1fr; height: auto; overflow: visible; }
@@ -138,8 +154,14 @@
       <span class="sync-dot syncing" id="sync-dot"></span>
       <span id="sync-label">Connecting...</span>
     </span>
-    <button class="btn btn-ghost btn-sm" onclick="loadEntries()">
+    <button class="btn btn-ghost btn-sm" onclick="loadEntries()" title="Refresh">
       <i class="ti ti-refresh"></i>
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="openManageCategories()">
+      <i class="ti ti-tags"></i> Categories
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="exportPDF()">
+      <i class="ti ti-file-type-pdf"></i> Export PDF
     </button>
   </div>
 </header>
@@ -165,30 +187,10 @@
       </div>
     </div>
 
-    <div class="form-group">
+    <div class="form-group" style="position:relative;">
       <label class="form-label" for="entry-category">Figma Page / Category <span>*</span></label>
-      <select id="entry-category">
-        <option value="">Select a category...</option>
-        <option>Onboarding</option>
-        <option>Add New Program</option>
-        <option>Dashboard</option>
-        <option>Care Plan Generation</option>
-        <option>Care Plan Generated</option>
-        <option>In-Session</option>
-        <option>Pre-Session</option>
-        <option>Post-Session</option>
-        <option>RICE Program</option>
-        <option>Care Pack</option>
-        <option>Sara-Bot</option>
-        <option>Care Team</option>
-        <option>Settings</option>
-        <option>Registration & Activation</option>
-        <option>vErgo</option>
-        <option>Pelvic Floor</option>
-        <option>Reminders</option>
-        <option>Component Library</option>
-        <option>Other</option>
-      </select>
+      <input type="text" id="entry-category" placeholder="Type or pick a page..." autocomplete="off" oninput="filterSuggestions(this.value)" onfocus="filterSuggestions(this.value)" onblur="hideSuggestions()">
+      <div id="cat-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--white); border:1.5px solid var(--blue); border-radius:8px; box-shadow:0px 4px 16px rgba(0,27,54,0.12); z-index:50; max-height:220px; overflow-y:auto; margin-top:4px;"></div>
     </div>
 
     <div class="form-group">
@@ -205,6 +207,11 @@
     <div class="form-group">
       <label class="form-label" for="entry-author">Author</label>
       <input type="text" id="entry-author" placeholder="Your name">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="entry-date">Date</label>
+      <input type="date" id="entry-date">
     </div>
 
     <div class="form-divider"></div>
@@ -226,18 +233,49 @@
       </select>
       <select class="filter-select" id="filter-category" onchange="renderFeed()">
         <option value="">All pages</option>
-        <option>Onboarding</option><option>Add New Program</option><option>Dashboard</option>
-        <option>Care Plan Generation</option><option>Care Plan Generated</option>
-        <option>In-Session</option><option>Pre-Session</option><option>Post-Session</option>
-        <option>RICE Program</option><option>Care Pack</option><option>Sara-Bot</option>
-        <option>Care Team</option><option>Settings</option><option>Registration & Activation</option>
-        <option>vErgo</option><option>Pelvic Floor</option><option>Reminders</option>
-        <option>Component Library</option><option>Other</option>
+        <option>Registration</option>
+        <option>Onboarding</option>
+        <option>Care Plan Section</option>
+        <option>Dashboard</option>
+        <option>MSK Programs</option>
+        <option>MSK Sessions Section</option>
+        <option>MSK Virtual Ergonomic</option>
+        <option>Care Pack</option>
+        <option>Reminders</option>
+        <option>Sara Bot</option>
+        <option>Benefits Card</option>
+        <option>RICE</option>
+        <option>Video Visits</option>
+        <option>Profile</option>
+        <option>Progress Check-In</option>
+        <option>QA</option>
       </select>
+      <div style="display:flex; align-items:center; gap:6px; background:var(--grey5); border:1.5px solid var(--grey3); border-radius:100px; padding:6px 14px;">
+        <i class="ti ti-calendar" style="font-size:14px; color:var(--grey2);"></i>
+        <input type="date" id="filter-date-from" class="date-filter-input" onchange="renderFeed()" title="From date">
+        <span style="font-size:12px; color:var(--grey3);">—</span>
+        <input type="date" id="filter-date-to" class="date-filter-input" onchange="renderFeed()" title="To date">
+        <button onclick="clearDateFilter()" id="clear-date-btn" title="Clear dates" style="display:none; background:none; border:none; cursor:pointer; color:var(--grey2); font-size:14px; padding:0; line-height:1;"><i class="ti ti-x"></i></button>
+      </div>
     </div>
     <div class="feed-stats" id="feed-stats"></div>
     <div id="feed-list"><div class="empty-state"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i><p>Loading...</p></div></div>
   </main>
+</div>
+
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal" style="width:520px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+      <div class="modal-title" style="margin-bottom:0;">Manage Categories</div>
+      <button class="action-btn" onclick="closeCatModal()" style="opacity:1;"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:13px; color:var(--grey1); margin-bottom:16px; line-height:1.5;">Add, remove, or rename categories. Changes apply to the suggestion list for everyone.</p>
+    <div class="modal-scroll" id="cat-list"></div>
+    <div class="cat-add-row">
+      <input type="text" id="new-cat-input" placeholder="Add a new category..." maxlength="80" onkeydown="if(event.key==='Enter') addCategory()">
+      <button class="btn btn-primary btn-sm" onclick="addCategory()"><i class="ti ti-plus"></i> Add</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="delete-modal">
@@ -307,6 +345,7 @@
     btn.disabled = true;
     btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Saving...';
 
+    const dateVal = document.getElementById('entry-date').value || today();
     const row = {
       title,
       type:      selectedType,
@@ -314,6 +353,7 @@
       rationale: document.getElementById('entry-rationale').value.trim() || null,
       figma:     document.getElementById('entry-figma').value.trim()     || null,
       author:    document.getElementById('entry-author').value.trim()    || 'Haley',
+      date:      dateVal,
       version:   null
     };
 
@@ -354,11 +394,21 @@
     const fType     = document.getElementById('filter-type').value;
     const fCat      = document.getElementById('filter-category').value;
 
-    const filtered = allEntries.filter(e =>
-      (!search || (e.title||'').toLowerCase().includes(search) || (e.rationale||'').toLowerCase().includes(search) || (e.category||'').toLowerCase().includes(search)) &&
-      (!fType  || e.type === fType) &&
-      (!fCat   || e.category === fCat)
-    );
+    const fDateFrom = document.getElementById('filter-date-from').value;
+    const fDateTo   = document.getElementById('filter-date-to').value;
+    const clearBtn  = document.getElementById('clear-date-btn');
+    if (clearBtn) clearBtn.style.display = (fDateFrom || fDateTo) ? 'block' : 'none';
+
+    const filtered = allEntries.filter(e => {
+      const eDate = (e.date || e.created_at || '').slice(0,10);
+      return (
+        (!search    || (e.title||'').toLowerCase().includes(search) || (e.rationale||'').toLowerCase().includes(search) || (e.category||'').toLowerCase().includes(search)) &&
+        (!fType     || e.type === fType) &&
+        (!fCat      || e.category === fCat) &&
+        (!fDateFrom || eDate >= fDateFrom) &&
+        (!fDateTo   || eDate <= fDateTo)
+      );
+    });
 
     const c = {Component:0,Flow:0,Screen:0,Decision:0};
     allEntries.forEach(e => { if (c[e.type]!==undefined) c[e.type]++; });
@@ -408,6 +458,7 @@
   function clearForm() {
     ['entry-title','entry-rationale','entry-figma','entry-author'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('entry-category').value = '';
+    document.getElementById('entry-date').value = today();
     document.getElementById('title-count').textContent = '0 / 120';
     document.getElementById('rationale-count').textContent = '0 / 600';
     selectedType = '';
@@ -436,6 +487,266 @@
   document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
   document.getElementById('delete-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
+
+
+  function filterSuggestions(val) {
+    const box = document.getElementById('cat-suggestions');
+    const q = val.trim().toLowerCase();
+    // Build list: matches first, then rest
+    const matches = CATEGORIES.filter(c => c.toLowerCase().includes(q));
+    const show = q ? matches : CATEGORIES;
+    if (!show.length) { box.style.display='none'; return; }
+    box.innerHTML = show.map(c =>
+      `<div class="cat-option" onmousedown="pickCategory('${c}')">${highlight(c, q)}</div>`
+    ).join('');
+    box.style.display = 'block';
+  }
+
+  function highlight(text, q) {
+    if (!q) return text;
+    const i = text.toLowerCase().indexOf(q);
+    if (i === -1) return text;
+    return text.slice(0,i) + '<strong>' + text.slice(i, i+q.length) + '</strong>' + text.slice(i+q.length);
+  }
+
+  function pickCategory(val) {
+    document.getElementById('entry-category').value = val;
+    hideSuggestions();
+  }
+
+  function hideSuggestions() {
+    setTimeout(() => {
+      const box = document.getElementById('cat-suggestions');
+      if (box) box.style.display = 'none';
+    }, 150);
+  }
+
+  const CAT_STORAGE_KEY = 'st_changelog_categories_v1';
+
+  function getCategories() {
+    try {
+      const stored = localStorage.getItem(CAT_STORAGE_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch(e) {}
+    return [
+      'Registration',
+      'Onboarding',
+      'Onboarding → For Muscle and Joint Pain Relief',
+      'Onboarding → For Work and Life Prevention',
+      'Onboarding → For Rehabilitation + Lifestyle and Maintenance',
+      'Onboarding → For Pelvic Health',
+      'Care Plan Section',
+      'Care Plan Section → Care Plan Generation (Animation)',
+      'Care Plan Section → Care Plan Generated',
+      'Dashboard',
+      'Dashboard → Manage Dashboard',
+      'Dashboard → Clinical Red Flags (WIP)',
+      'MSK Programs',
+      'MSK Programs → Manage Programs',
+      'MSK Programs → Add New/Recommended Program',
+      'MSK Sessions Section',
+      'MSK Sessions Section → Complete User Flow',
+      'MSK Sessions Section → In-Session',
+      'MSK Sessions Section → My Journey',
+      'MSK Sessions Section → Session History',
+      'MSK Sessions Section → Download Session Offline',
+      'MSK Sessions Section → Post Session',
+      'MSK Sessions Section → ADLS',
+      'MSK Sessions Section → Edge Cases',
+      'MSK Virtual Ergonomic',
+      'MSK Virtual Ergonomic → Pre VErgo Meet (Assessment)',
+      'MSK Virtual Ergonomic → In-VErgo Meet',
+      'Care Pack',
+      'Reminders',
+      'Sara Bot',
+      'Benefits Card',
+      'RICE',
+      'RICE → RICE Onboarding',
+      'RICE → RICE Day to Day Triggers',
+      'RICE → Manage RICE',
+      'Video Visits',
+      'Video Visits → Onboarding Video Visit',
+      'Video Visits → Chat with Coach',
+      'Profile',
+      'Progress Check-In',
+      'Progress Check-In → 30 & 90 Days',
+      'Progress Check-In → 60 & 120 Days',
+      'QA'
+    ];
+  }
+
+  function saveCategories(cats) {
+    localStorage.setItem(CAT_STORAGE_KEY, JSON.stringify(cats));
+  }
+
+  function openManageCategories() {
+    renderCatList();
+    document.getElementById('cat-modal').classList.add('open');
+  }
+
+  function closeCatModal() {
+    document.getElementById('cat-modal').classList.remove('open');
+    document.getElementById('new-cat-input').value = '';
+  }
+
+  function renderCatList() {
+    const cats = getCategories();
+    const el = document.getElementById('cat-list');
+    if (!cats.length) {
+      el.innerHTML = '<p style="font-size:13px; color:var(--grey2); padding:8px 0;">No categories yet. Add one below.</p>';
+      return;
+    }
+    el.innerHTML = cats.map((c, i) => `
+      <div class="cat-manage-row">
+        <span class="cat-manage-name">${esc(c)}</span>
+        <button class="cat-manage-del" title="Delete" onclick="deleteCategory(${i})"><i class="ti ti-trash"></i></button>
+      </div>`).join('');
+  }
+
+  function addCategory() {
+    const input = document.getElementById('new-cat-input');
+    const val = input.value.trim();
+    if (!val) return;
+    const cats = getCategories();
+    if (cats.includes(val)) { showToast('Category already exists', 'ti-alert-circle'); return; }
+    cats.push(val);
+    saveCategories(cats);
+    input.value = '';
+    renderCatList();
+    showToast('Category added');
+  }
+
+  function deleteCategory(idx) {
+    const cats = getCategories();
+    cats.splice(idx, 1);
+    saveCategories(cats);
+    renderCatList();
+    showToast('Category removed', 'ti-trash');
+  }
+
+  function filterSuggestions(val) {
+    const box = document.getElementById('cat-suggestions');
+    const q = val.trim().toLowerCase();
+    const cats = getCategories();
+    const show = q ? cats.filter(c => c.toLowerCase().includes(q)) : cats;
+    if (!show.length) { box.style.display='none'; return; }
+    box.innerHTML = show.map(c =>
+      `<div class="cat-option" onmousedown="pickCategory('${c.replace(/'/g, "\'")}')">${highlight(c, q)}</div>`
+    ).join('');
+    box.style.display = 'block';
+  }
+
+  function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = 210;
+    const margin = 16;
+    const contentW = pageW - margin * 2;
+    let y = 20;
+
+    const filterType = document.getElementById('filter-type').value;
+    const filterCat  = document.getElementById('filter-category').value;
+    const search     = document.getElementById('search-input').value.toLowerCase();
+
+    const filtered = allEntries.filter(e =>
+      (!search || (e.title||'').toLowerCase().includes(search) || (e.rationale||'').toLowerCase().includes(search)) &&
+      (!filterType || e.type === filterType) &&
+      (!filterCat  || e.category === filterCat)
+    );
+
+    const typeColors = {
+      Component: [13, 110, 153],
+      Flow:      [92, 31, 160],
+      Screen:    [181, 66, 0],
+      Decision:  [6, 132, 90]
+    };
+
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 27, 54);
+    doc.text('ST Design Changelog', margin, y);
+    y += 7;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(132, 150, 168);
+    const subtitle = [
+      'SimpleTherapy',
+      `Exported ${new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})}`,
+      filtered.length + ' entries' + (filterType ? ' · ' + filterType : '') + (filterCat ? ' · ' + filterCat : '')
+    ].join('   ·   ');
+    doc.text(subtitle, margin, y);
+    y += 3;
+
+    doc.setDrawColor(199, 207, 217);
+    doc.setLineWidth(0.4);
+    doc.line(margin, y + 2, pageW - margin, y + 2);
+    y += 8;
+
+    filtered.forEach((e, idx) => {
+      const titleLines = doc.splitTextToSize((e.title || ''), contentW - 30);
+      const rationaleLines = e.rationale ? doc.splitTextToSize(e.rationale, contentW) : [];
+      const blockH = 6 + titleLines.length * 5.5 + (rationaleLines.length ? rationaleLines.length * 4.5 + 3 : 0) + 10;
+
+      if (y + blockH > 277) {
+        doc.addPage();
+        y = 16;
+      }
+
+      const col = typeColors[e.type] || [82, 99, 118];
+
+      doc.setFillColor(col[0], col[1], col[2]);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      const tagW = doc.getTextWidth(e.type || '') + 6;
+      doc.roundedRect(margin, y - 3.5, tagW, 5.5, 1.5, 1.5, 'F');
+      doc.text((e.type || '').toUpperCase(), margin + 3, y + 0.5);
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 27, 54);
+      doc.text(titleLines, margin + tagW + 4, y);
+      y += titleLines.length * 5.5 + 1;
+
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(132, 150, 168);
+      const meta = [e.category, e.author, e.date ? fmtDate(e.date) : ''].filter(Boolean).join('   ·   ');
+      doc.text(meta, margin, y);
+      y += 5;
+
+      if (rationaleLines.length) {
+        doc.setFontSize(9.5);
+        doc.setTextColor(82, 99, 118);
+        doc.text(rationaleLines, margin, y);
+        y += rationaleLines.length * 4.5 + 2;
+      }
+
+      if (e.figma) {
+        doc.setFontSize(8.5);
+        doc.setTextColor(30, 165, 222);
+        doc.text('↗ Figma link', margin, y);
+        doc.link(margin, y - 3, 20, 4, { url: e.figma });
+        y += 4;
+      }
+
+      if (idx < filtered.length - 1) {
+        doc.setDrawColor(236, 242, 246);
+        doc.setLineWidth(0.3);
+        doc.line(margin, y + 1, pageW - margin, y + 1);
+        y += 5;
+      }
+    });
+
+    const dateStr = new Date().toISOString().slice(0,10);
+    doc.save('st-design-changelog-' + dateStr + '.pdf');
+    showToast('PDF exported');
+  }
+
+  document.getElementById('cat-modal').addEventListener('click', function(e) { if(e.target===this) closeCatModal(); });
+
+  document.getElementById('entry-date').value = today();
   loadEntries();
 </script>
 </body>
