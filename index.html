@@ -300,8 +300,19 @@
     'Content-Type':  'application/json',
     'apikey':        ANON_KEY,
     'Authorization': 'Bearer ' + ANON_KEY,
-    'Prefer':        'return=representation'
+    'Prefer':        'return=representation',
+    'X-Client-Info': 'st-changelog/1.0'
   };
+
+  async function sbFetch(url, options = {}) {
+    const res = await fetch(url, { ...options, headers: { ...H, ...(options.headers||{}) } });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : [];
+  }
 
   let allEntries = [];
   let deleteTarget = null;
@@ -317,20 +328,14 @@
   async function loadEntries() {
     setSync('syncing', 'Loading...');
     try {
-      const res = await fetch(BASE + '?select=*&order=created_at.desc', { headers: H });
-      if (!res.ok) {
-        const err = await res.text();
-        console.error('Supabase error:', res.status, err);
-        throw new Error(err);
-      }
-      allEntries = await res.json();
+      allEntries = await sbFetch(BASE + '?select=*&order=created_at.desc');
       renderFeed();
       setSync('ok', 'Live');
     } catch(e) {
-      console.error(e);
+      console.error('loadEntries error:', e);
       setSync('error', 'Connection error');
       showToast('Could not connect to database', 'ti-alert-circle');
-      document.getElementById('feed-list').innerHTML = `<div class="empty-state"><i class="ti ti-wifi-off"></i><p>Could not load entries</p><span style="font-size:13px">Check console for details or try refreshing.</span></div>`;
+      document.getElementById('feed-list').innerHTML = `<div class="empty-state"><i class="ti ti-wifi-off"></i><p>Could not load entries</p><span style="font-size:13px; color:var(--grey2);">${e.message}</span></div>`;
     }
   }
 
@@ -358,9 +363,7 @@
     };
 
     try {
-      const res = await fetch(BASE, { method: 'POST', headers: H, body: JSON.stringify(row) });
-      if (!res.ok) throw new Error(await res.text());
-      const created = await res.json();
+      const created = await sbFetch(BASE, { method: 'POST', body: JSON.stringify(row) });
       allEntries.unshift(Array.isArray(created) ? created[0] : created);
       clearForm();
       renderFeed();
@@ -377,8 +380,7 @@
 
   async function confirmDelete() {
     try {
-      const res = await fetch(BASE + '?id=eq.' + deleteTarget, { method: 'DELETE', headers: H });
-      if (!res.ok) throw new Error(await res.text());
+      await sbFetch(BASE + '?id=eq.' + deleteTarget, { method: 'DELETE', headers: { ...H, 'Prefer': 'return=minimal' } });
       allEntries = allEntries.filter(e => e.id !== deleteTarget);
       renderFeed();
       closeModal();
