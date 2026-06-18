@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ST Design Changelog</title>
+<link href="https://fonts.cdnfonts.com/css/avenir-next" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1ea5de;--lblue:#e9f6fc;--black:#001b36;
+  --g0:#3d4f62;--g1:#526376;--g2:#8496a8;--g3:#c7cfd9;--g4:#ecf2f6;--g5:#f6f9fb;--g6:#fafafa;
+  --white:#fff;--green:#2eb695;--dgreen:#06845a;--lgreen:#ebf8f5;
+  --purple:#814adf;--lpurple:#f2edfc;
+  --dred:#c83739;--lred:#fff1f2;--red:#ff7678;--orange:#ff790c;
+  --sl:0px 2px 4px rgba(0,27,54,0.08);
+  --sm:0px 2px 8px rgba(0,27,54,0.08);
+  --sh:0px 2px 16px rgba(0,27,54,0.08);
+}
+html,body{height:100%;font-family:"Avenir Next",-apple-system,sans-serif;background:var(--g5);color:var(--black);font-size:15px;letter-spacing:-0.02em;line-height:1.4;}
+
+/* ── TOPBAR ── */
+.topbar{height:56px;background:var(--white);border-bottom:1px solid var(--g4);padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--sl);}
+.topbar-logo{background:var(--black);color:var(--white);font-size:11px;font-weight:700;letter-spacing:0.05em;padding:4px 9px;border-radius:6px;}
+.topbar-title{font-size:17px;font-weight:700;margin-left:10px;}
+.topbar-left{display:flex;align-items:center;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:inherit;letter-spacing:-0.02em;transition:all 0.15s;white-space:nowrap;}
+.btn-primary{background:var(--blue);color:var(--white);}
+.btn-primary:hover{background:#198fbf;}
+.btn-primary:disabled{background:var(--g3);cursor:not-allowed;}
+.btn-ghost{background:transparent;color:var(--g1);border:1.5px solid var(--g3);}
+.btn-ghost:hover{background:var(--g5);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-danger{background:var(--lred);color:var(--dred);border:1.5px solid var(--red);}
+.btn-danger:hover{background:#ffe0e0;}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 56px);overflow:hidden;}
+
+/* ── FORM PANEL ── */
+.form-panel{background:var(--white);border-right:1px solid var(--g4);overflow-y:auto;padding:16px;}
+.form-panel input[type=text],
+.form-panel input[type=url],
+.form-panel input[type=date],
+.form-panel textarea,
+.form-panel select,
+.add-change-inline input[type=text],
+.add-change-inline input[type=url],
+.add-change-inline textarea,
+.cif input[type=text],
+.cif input[type=url],
+.cif textarea,
+.date-popover input[type=date]{
+  width:100%;padding:8px 10px;border-radius:7px;border:1.5px solid var(--g3);
+  font-family:inherit;font-size:13px;font-weight:500;color:var(--black);
+  background:var(--white);letter-spacing:-0.02em;outline:none;
+  transition:border-color 0.15s;-webkit-appearance:none;appearance:none;
+}
+.form-panel input:focus,.form-panel textarea:focus,.form-panel select:focus,
+.add-change-inline input:focus,.add-change-inline textarea:focus,
+.cif input:focus,.cif textarea:focus,.date-popover input:focus{
+  border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,165,222,0.1);
+}
+.form-panel textarea,.add-change-inline textarea,.cif textarea{resize:vertical;min-height:64px;line-height:1.5;}
+.form-panel select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%238496a8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer;}
+.form-lbl{display:block;font-size:12px;font-weight:700;color:var(--g0);margin-bottom:4px;}
+.form-lbl span{color:var(--red);}
+.form-row{margin-bottom:12px;}
+.char-count{font-size:11px;color:var(--g2);text-align:right;margin-top:2px;}
+.form-divider{height:1px;background:var(--g4);margin:12px 0;}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--g2);margin-bottom:10px;}
+
+/* ── TYPE PILLS ── */
+.type-pills{display:flex;flex-wrap:wrap;gap:6px;}
+.type-pill{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--g3);color:var(--g1);background:var(--white);transition:all 0.15s;user-select:none;}
+.type-pill:hover{background:var(--g5);}
+.type-pill.sel-component{background:var(--lblue);color:#0d6e99;border-color:var(--blue);}
+.type-pill.sel-flow{background:var(--lpurple);color:#5c1fa0;border-color:var(--purple);}
+.type-pill.sel-screen{background:#fff3eb;color:#b54200;border-color:var(--orange);}
+.type-pill.sel-decision{background:var(--lgreen);color:var(--dgreen);border-color:var(--green);}
+
+/* ── AUTOCOMPLETE ── */
+.ac-wrap{position:relative;}
+.ac-dropdown{display:none;position:absolute;top:calc(100%+3px);left:0;right:0;background:var(--white);border:1.5px solid var(--blue);border-radius:8px;box-shadow:var(--sh);z-index:50;max-height:180px;overflow-y:auto;}
+.ac-opt{padding:7px 12px;font-size:13px;cursor:pointer;color:var(--black);}
+.ac-opt:hover{background:var(--g5);}
+.ac-opt strong{color:var(--blue);font-weight:700;}
+
+/* ── CHANGES FORM ── */
+.changes-section{background:var(--g5);border-radius:8px;padding:10px;margin-bottom:12px;}
+.cif{background:var(--white);border-radius:7px;padding:10px;margin-bottom:8px;border:1px solid var(--g4);position:relative;}
+.cif-num{font-size:10px;font-weight:700;color:var(--g2);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:7px;}
+.cif-remove{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:5px;border:1px solid var(--g3);background:var(--white);color:var(--g2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;}
+.cif-remove:hover{background:var(--lred);color:var(--dred);border-color:var(--red);}
+.img-drop{border:1.5px dashed var(--g3);border-radius:7px;padding:10px;text-align:center;cursor:pointer;background:var(--g6);position:relative;margin-top:6px;transition:all 0.15s;}
+.img-drop:hover,.img-drop.drag-over{border-color:var(--blue);background:var(--lblue);}
+.img-drop.has-img{border-style:solid;border-color:var(--green);padding:4px;}
+.img-drop .hint{font-size:11px;color:var(--g2);pointer-events:none;}
+.img-drop .hint i{font-size:18px;display:block;margin-bottom:3px;color:var(--g3);}
+.img-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.img-preview{width:100%;border-radius:5px;max-height:100px;object-fit:cover;display:block;}
+.img-remove{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,27,54,0.6);color:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;border:none;}
+.paste-hint{font-size:11px;color:var(--g2);text-align:center;margin-top:3px;}
+.paste-hint kbd{background:var(--g4);border-radius:3px;padding:1px 4px;font-family:monospace;font-size:10px;}
+
+/* ── FEED PANEL ── */
+.feed-panel{overflow-y:auto;padding:14px 18px;background:var(--g5);}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:var(--white);border-radius:9px;box-shadow:var(--sl);padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.fb-search{position:relative;width:180px;flex-shrink:0;}
+.fb-search i{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--g2);pointer-events:none;}
+.fb-search input{width:100%;padding:6px 8px 6px 28px;border-radius:7px;border:1.5px solid var(--g3);font-family:inherit;font-size:12px;font-weight:500;color:var(--black);background:var(--g5);outline:none;transition:border-color 0.15s;-webkit-appearance:none;}
+.fb-search input:focus{border-color:var(--blue);background:var(--white);}
+.fb-sep{width:1px;height:18px;background:var(--g4);flex-shrink:0;margin:0 2px;}
+.fb-pill{position:relative;display:inline-flex;align-items:center;gap:3px;padding:5px 8px;border-radius:7px;border:1.5px solid var(--g4);background:var(--g5);font-family:inherit;font-size:11px;font-weight:700;color:var(--g1);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.15s;-webkit-user-select:none;user-select:none;}
+.fb-pill:hover{border-color:var(--g3);background:var(--g4);}
+.fb-pill select{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:12px;}
+.fb-pill i{font-size:10px;color:var(--g3);}
+.fb-pill.on{border-color:var(--blue);background:var(--lblue);color:#0d7db5;}
+.fb-pill.on i{color:var(--blue);}
+.fb-date-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border-radius:7px;border:1.5px solid var(--g4);background:var(--g5);font-family:inherit;font-size:11px;font-weight:700;color:var(--g1);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.15s;margin-left:auto;}
+.fb-date-btn:hover{border-color:var(--g3);background:var(--g4);}
+.fb-date-btn i{font-size:12px;color:var(--g2);}
+.fb-date-btn.on{border-color:var(--blue);background:var(--lblue);color:#0d7db5;}
+.fb-date-btn.on i{color:var(--blue);}
+.date-popover{display:none;position:absolute;top:calc(100%+6px);right:0;background:var(--white);border:1.5px solid var(--g3);border-radius:9px;box-shadow:var(--sh);padding:12px 14px;z-index:200;width:230px;}
+.date-popover.open{display:block;}
+.dp-row{margin-bottom:9px;}
+.dp-row label{font-size:10px;font-weight:700;color:var(--g2);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:3px;}
+.dp-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:10px;padding-top:9px;border-top:1px solid var(--g4);}
+
+/* ── STATS ── */
+.stats{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;}
+.stat{background:var(--white);border:1px solid var(--g4);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--g1);}
+.stat strong{font-weight:700;color:var(--black);margin-right:3px;}
+
+/* ── ENTRY CARD ── */
+.card{background:var(--white);border-radius:9px;box-shadow:var(--sl);margin-bottom:8px;border:1px solid var(--g4);overflow:hidden;transition:border-color 0.15s;}
+.card:hover{border-color:var(--g3);}
+.card[data-type=Component]{border-left:3px solid var(--blue);}
+.card[data-type=Flow]{border-left:3px solid var(--purple);}
+.card[data-type=Screen]{border-left:3px solid var(--orange);}
+.card[data-type=Decision]{border-left:3px solid var(--green);}
+.card-head{padding:11px 14px 9px;}
+.card-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.etag{font-size:10px;font-weight:700;letter-spacing:0.04em;padding:2px 7px;border-radius:5px;flex-shrink:0;margin-top:2px;}
+.etag-component{background:var(--lblue);color:#0d6e99;}
+.etag-flow{background:var(--lpurple);color:#5c1fa0;}
+.etag-screen{background:#fff3eb;color:#b54200;}
+.etag-decision{background:var(--lgreen);color:var(--dgreen);}
+.card-title{font-size:15px;font-weight:700;color:var(--black);line-height:1.3;flex:1;}
+.card-actions{display:flex;gap:4px;opacity:0;transition:opacity 0.15s;flex-shrink:0;}
+.card:hover .card-actions{opacity:1;}
+.card-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.meta-item{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--g2);}
+.meta-item i{font-size:12px;}
+.cat-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:var(--g4);color:var(--g1);}
+.card-note{font-size:13px;color:var(--g1);line-height:1.5;margin-top:6px;}
+
+/* ── CHANGES TABLE ── */
+.changes-table{width:100%;border-collapse:collapse;}
+.changes-table thead tr{background:var(--g5);border-top:1px solid var(--g4);border-bottom:1px solid var(--g4);}
+.changes-table thead th{padding:5px 14px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--g2);text-align:left;}
+.changes-table thead th.th-num{width:36px;}
+.changes-table thead th.th-img{width:72px;text-align:center;}
+.changes-table thead th.th-figma{width:90px;}
+.changes-table thead th.th-del{width:36px;}
+.changes-table tbody tr{border-bottom:1px solid var(--g4);}
+.changes-table tbody tr:last-child{border-bottom:none;}
+.changes-table tbody tr:hover{background:var(--g6);}
+.changes-table tbody tr:hover .row-del{opacity:1;}
+.td-num{padding:8px 14px;text-align:center;}
+.row-num{width:20px;height:20px;border-radius:50%;background:var(--g4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--g1);}
+.td-desc{padding:8px 14px 8px 0;}
+.row-desc{font-size:13px;font-weight:500;color:var(--black);line-height:1.4;}
+.td-img{padding:6px 14px;text-align:center;}
+.row-thumb{width:60px;height:40px;object-fit:cover;border-radius:5px;border:1px solid var(--g4);cursor:pointer;display:block;margin:0 auto;transition:opacity 0.15s;}
+.row-thumb:hover{opacity:0.85;}
+.row-no-img{width:60px;height:40px;border-radius:5px;border:1px dashed var(--g3);display:flex;align-items:center;justify-content:center;margin:0 auto;}
+.row-no-img i{font-size:14px;color:var(--g3);}
+.td-figma{padding:8px 14px 8px 0;}
+.row-figma{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--blue);text-decoration:none;padding:3px 7px;border-radius:5px;background:var(--lblue);}
+.row-figma:hover{background:#d4eef9;}
+.td-del{padding:8px 14px 8px 0;}
+.row-del{opacity:0;transition:opacity 0.15s;}
+
+/* ── ADD CHANGE ── */
+.add-bar{padding:8px 14px;background:var(--g6);border-top:1px solid var(--g4);}
+.add-change-inline{display:none;padding:12px 14px;background:var(--g5);border-top:1px solid var(--g4);}
+.add-change-inline.open{display:block;}
+
+/* ── ACTION BUTTON ── */
+.act{width:26px;height:26px;border-radius:6px;border:1px solid var(--g3);background:var(--white);color:var(--g2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all 0.15s;}
+.act:hover{background:var(--g5);}
+.act.del:hover{background:var(--lred);color:var(--dred);border-color:var(--red);}
+
+/* ── EMPTY / LOADING ── */
+.empty{text-align:center;padding:50px 20px;color:var(--g2);}
+.empty i{font-size:36px;display:block;margin-bottom:10px;}
+.empty p{font-size:15px;font-weight:700;color:var(--g1);margin-bottom:4px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--black);color:var(--white);padding:9px 18px;border-radius:100px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:all 0.2s;z-index:999;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,27,54,0.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--white);border-radius:14px;padding:22px;width:460px;max-width:calc(100vw - 24px);box-shadow:var(--sh);transform:translateY(6px);transition:transform 0.2s;}
+.overlay.open .modal{transform:translateY(0);}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:5px;}
+.modal-sub{font-size:13px;color:var(--g1);margin-bottom:14px;line-height:1.5;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.modal-scroll{max-height:280px;overflow-y:auto;}
+.cat-row{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:0.5px solid var(--g4);}
+.cat-row:last-child{border-bottom:none;}
+.cat-name{flex:1;font-size:13px;color:var(--black);}
+.cat-del{width:24px;height:24px;border-radius:5px;border:1px solid var(--g3);background:var(--white);color:var(--g2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;flex-shrink:0;}
+.cat-del:hover{background:var(--lred);color:var(--dred);border-color:var(--red);}
+.cat-add{display:flex;gap:7px;margin-top:10px;}
+.cat-add input{flex:1;}
+
+/* ── LIGHTBOX ── */
+.lightbox{position:fixed;inset:0;background:rgba(0,27,54,0.9);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.lightbox.open{opacity:1;pointer-events:all;}
+.lightbox img{max-width:92vw;max-height:90vh;border-radius:8px;}
+.lb-close{position:fixed;top:16px;right:20px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.15);color:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:none;}
+
+/* ── SYNC DOT ── */
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;}
+.sdot.spin{background:var(--orange);animation:pulse 1s ease-in-out infinite;}
+.sdot.err{background:var(--red);}
+
+/* ── CATEGORY BADGE COLORS ── */
+.cat-badge-wrap{display:inline-flex;align-items:center;gap:0;}
+
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+@keyframes spin2{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:var(--g3);border-radius:10px;}
+@media(max-width:800px){.app{grid-template-columns:1fr;height:auto;overflow:visible;}.form-panel{border-right:none;border-bottom:1px solid var(--g4);}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">ST</div>
+    <span class="topbar-title">Design Changelog</span>
+  </div>
+  <div class="topbar-right">
+    <span style="font-size:12px;color:var(--g2);display:flex;align-items:center;"><span class="sdot spin" id="sdot"></span><span id="slbl">Connecting...</span></span>
+    <button class="btn btn-ghost btn-sm" onclick="loadEntries()"><i class="ti ti-refresh"></i></button>
+    <button class="btn btn-ghost btn-sm" onclick="openManageCategories()"><i class="ti ti-tags"></i> Categories</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportPDF()"><i class="ti ti-file-type-pdf"></i> Export PDF</button>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- ── FORM PANEL ── -->
+  <aside class="form-panel">
+    <div class="sec-title">Log a Change</div>
+    <p style="font-size:11px;color:var(--g2);margin-bottom:12px;"><span style="color:var(--red)">*</span> Required</p>
+
+    <div class="form-row">
+      <label class="form-lbl" for="e-title">Title <span>*</span></label>
+      <input type="text" id="e-title" placeholder="e.g. Onboarding flow redesign" maxlength="120">
+      <div class="char-count" id="title-count">0 / 120</div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-lbl">Change Type <span>*</span></label>
+      <div class="type-pills">
+        <div class="type-pill" data-type="Component" onclick="selType(this)">Component</div>
+        <div class="type-pill" data-type="Flow" onclick="selType(this)">Flow</div>
+        <div class="type-pill" data-type="Screen" onclick="selType(this)">Screen</div>
+        <div class="type-pill" data-type="Decision" onclick="selType(this)">Decision</div>
+      </div>
+    </div>
+
+    <div class="form-row ac-wrap">
+      <label class="form-lbl" for="e-cat">Figma Page / Category <span>*</span></label>
+      <input type="text" id="e-cat" placeholder="Type or pick a page..." autocomplete="off"
+        oninput="acFilter(this.value)" onfocus="acFilter(this.value)" onblur="acHide()">
+      <div id="ac-drop" class="ac-dropdown"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="form-row">
+        <label class="form-lbl" for="e-author">Author</label>
+        <input type="text" id="e-author" placeholder="Your name">
+      </div>
+      <div class="form-row">
+        <label class="form-lbl" for="e-date">Date</label>
+        <input type="date" id="e-date">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-lbl" for="e-note">Overview / Context</label>
+      <textarea id="e-note" placeholder="Brief context for this change set..." maxlength="400"></textarea>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="changes-section">
+      <div class="sec-title">Changes <span id="cc-badge" style="background:var(--blue);color:var(--white);border-radius:100px;padding:1px 7px;font-size:9px;margin-left:3px;">1</span></div>
+      <div id="cif-list"></div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;border-style:dashed;" onclick="addCIF()">
+        <i class="ti ti-plus"></i> Add another change
+      </button>
+    </div>
+
+    <button class="btn btn-primary" id="submit-btn" style="width:100%;justify-content:center;" onclick="submitEntry()">
+      <i class="ti ti-check"></i> Save Entry
+    </button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:6px;" onclick="resetForm()">Clear form</button>
+  </aside>
+
+  <!-- ── FEED ── -->
+  <main class="feed-panel" id="feed-panel">
+
+    <div class="filter-bar">
+      <div class="fb-search">
+        <i class="ti ti-search"></i>
+        <input type="text" id="search-input" placeholder="Search..." oninput="renderFeed()">
+      </div>
+      <div class="fb-sep"></div>
+      <label class="fb-pill" id="pill-type">
+        <i class="ti ti-layout-list" style="font-size:11px;color:var(--g2);"></i>
+        <span id="pill-type-lbl">Type</span>
+        <i class="ti ti-chevron-down"></i>
+        <select id="filter-type" onchange="updatePill('type',this);renderFeed()">
+          <option value="">All types</option>
+          <option>Component</option><option>Flow</option><option>Screen</option><option>Decision</option>
+        </select>
+      </label>
+      <label class="fb-pill" id="pill-cat">
+        <i class="ti ti-file" style="font-size:11px;color:var(--g2);"></i>
+        <span id="pill-cat-lbl">Page</span>
+        <i class="ti ti-chevron-down"></i>
+        <select id="filter-category" onchange="updatePill('cat',this);renderFeed()">
+          <option value="">All pages</option>
+          <option>Registration</option><option>Onboarding</option><option>Care Plan Section</option>
+          <option>Dashboard</option><option>MSK Programs</option><option>MSK Sessions Section</option>
+          <option>MSK Virtual Ergonomic</option><option>Care Pack</option><option>Reminders</option>
+          <option>Sara Bot</option><option>Benefits Card</option><option>RICE</option>
+          <option>Video Visits</option><option>Profile</option><option>Progress Check-In</option><option>QA</option>
+        </select>
+      </label>
+      <div style="position:relative;margin-left:auto;" id="date-wrap">
+        <button class="fb-date-btn" id="date-btn" onclick="toggleDP(event)">
+          <i class="ti ti-calendar"></i>
+          <span id="date-lbl">Date range</span>
+          <i class="ti ti-chevron-down" style="font-size:10px;color:var(--g3);"></i>
+        </button>
+        <div class="date-popover" id="date-pop">
+          <div class="dp-row"><label>From</label><input type="date" id="f-from" onchange="onDateChange();renderFeed()"></div>
+          <div class="dp-row"><label>To</label><input type="date" id="f-to" onchange="onDateChange();renderFeed()"></div>
+          <div class="dp-actions">
+            <button class="btn btn-ghost btn-sm" onclick="clearDates()">Clear</button>
+            <button class="btn btn-primary btn-sm" onclick="closeDP()">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+    <div id="feed"></div>
+
+  </main>
+</div>
+
+<!-- DELETE ENTRY -->
+<div class="overlay" id="del-entry-ov">
+  <div class="modal">
+    <div class="modal-title">Delete entry?</div>
+    <div class="modal-sub">This removes the entry and all its changes permanently.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeOv()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelEntry()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CHANGE -->
+<div class="overlay" id="del-change-ov">
+  <div class="modal">
+    <div class="modal-title">Delete this change?</div>
+    <div class="modal-sub">This individual change will be removed.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeOv()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelChange()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<div class="overlay" id="cat-ov">
+  <div class="modal" style="width:500px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+      <div class="modal-title" style="margin-bottom:0;">Manage Categories</div>
+      <button class="act" onclick="closeOv()"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:12px;color:var(--g1);margin-bottom:12px;">Add or remove categories from the suggestion list.</p>
+    <div class="modal-scroll" id="cat-list"></div>
+    <div class="cat-add">
+      <input type="text" id="new-cat" placeholder="Add new category..." maxlength="80" onkeydown="if(event.key==='Enter')addCat()">
+      <button class="btn btn-primary btn-sm" onclick="addCat()"><i class="ti ti-plus"></i> Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lb" onclick="closeLB()">
+  <button class="lb-close"><i class="ti ti-x"></i></button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+const SUPABASE_URL = 'https://zhdynyxpscwlqhpgzwcy.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZHlueXhwc2N3bHFocGd6d2N5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTIwNzksImV4cCI6MjA5NzE4ODA3OX0.Eg7EZSzW7XHBWglqH2jnDT-sX3M0KaUE3U_USk0NT3k';
+const REST = SUPABASE_URL + '/rest/v1';
+const STORAGE = SUPABASE_URL + '/storage/v1/object/changelog-images';
+const STORAGE_PUBLIC = SUPABASE_URL + '/storage/v1/object/public/changelog-images';
+const H = { 'Content-Type':'application/json', 'apikey':ANON_KEY, 'Authorization':'Bearer '+ANON_KEY, 'Prefer':'return=representation' };
+const CAT_KEY = 'st_cats_v2';
+
+let allEntries = [];
+let changeItems = [];
+let selectedType = '';
+let deleteEntryTarget = null;
+let deleteChangeTarget = null;
+let changeItemCounter = 0;
+
+function today() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+async function sbFetch(url, opts={}) {
+  const res = await fetch(url, {...opts, headers:{...H,...(opts.headers||{})}});
+  if (!res.ok) throw new Error('HTTP '+res.status+': '+await res.text());
+  const t = await res.text(); return t ? JSON.parse(t) : [];
+}
+
+function setSync(state, label) {
+  document.getElementById('sdot').className = 'sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
+  document.getElementById('slbl').textContent = label;
+}
+
+// ── LOAD ──
+async function loadEntries() {
+  setSync('syncing','Loading...');
+  try {
+    const entries = await sbFetch(REST+'/changelog?select=*&order=created_at.desc');
+    const changes = await sbFetch(REST+'/changelog_changes?select=*&order=created_at.asc');
+    allEntries = entries.map(e => ({...e, changes: changes.filter(c => c.entry_id === e.id)}));
+    renderFeed();
+    setSync('ok','Live');
+  } catch(e) {
+    console.error(e);
+    setSync('error','Connection error');
+    document.getElementById('feed').innerHTML = `<div class="empty-state"><i class="ti ti-wifi-off"></i><p>Could not connect</p><span style="font-size:13px;color:var(--grey2)">${e.message}</span></div>`;
+  }
+}
+
+// ── FORM ──
+function initForm() {
+  changeItems = [];
+  changeItemCounter = 0;
+  document.getElementById('cif-list').innerHTML = '';
+  addChangeItem();
+  document.getElementById('e-date').value = today();
+}
+
+function addChangeItem() {
+  const id = ++changeItemCounter;
+  changeItems.push({ id, desc:'', figma:'', imageFile:null, imageDataUrl:null });
+  renderChangeItems();
+}
+
+function removeChangeItem(id) {
+  if (changeItems.length === 1) { showToast('Need at least one change', 'ti-alert-circle'); return; }
+  changeItems = changeItems.filter(c => c.id !== id);
+  renderChangeItems();
+}
+
+function renderChangeItems() {
+  document.getElementById('cc-badge').textContent = changeItems.length;
+  document.getElementById('cif-list').innerHTML = changeItems.map((c, idx) => `
+    <div class="cif" id="cif-${c.id}">
+      <div class="cif-num">Change ${idx+1}</div>
+      ${changeItems.length > 1 ? `<button class="cif-remove" onclick="removeChangeItem(${c.id})"><i class="ti ti-x"></i></button>` : ''}
+      <div class="form-group" style="margin-bottom:8px;">
+        <textarea placeholder="What changed? Be specific..." rows="2" style="min-height:60px;" oninput="updateChangeField(${c.id},'desc',this.value)">${esc(c.desc)}</textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <input type="url" placeholder="Figma link (optional)" value="${esc(c.figma)}" oninput="updateChangeField(${c.id},'figma',this.value)">
+      </div>
+      <div class="img-drop ${c.imageDataUrl ? 'has-image' : ''}" id="img-area-${c.id}"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDrop(event,${c.id})">
+        ${c.imageDataUrl
+          ? `<img class="img-preview" src="${c.imageDataUrl}" alt="preview"><button class="img-remove" onclick="removeImage(event,${c.id})"><i class="ti ti-x"></i></button>`
+          : `<div class="upload-hint"><i class="ti ti-photo"></i>Click to upload or drag image</div>`
+        }
+        ${!c.imageDataUrl ? `<input type="file" accept="image/*" onchange="handleFileSelect(event,${c.id})">` : ''}
+      </div>
+      <p class="paste-hint">or press <kbd>⌘V</kbd> / <kbd>Ctrl+V</kbd> to paste a screenshot</p>
+    </div>`).join('');
+}
+
+function updateChangeField(id, field, val) {
+  const item = changeItems.find(c => c.id === id);
+  if (item) item[field] = val;
+}
+
+function handleFileSelect(e, id) {
+  const file = e.target.files[0];
+  if (file) setImageForItem(id, file);
+}
+
+function handleDrop(e, id) {
+  e.preventDefault();
+  document.getElementById('img-area-'+id).classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) setImageForItem(id, file);
+}
+
+function setImageForItem(id, file) {
+  const item = changeItems.find(c => c.id === id);
+  if (!item) return;
+  item.imageFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => { item.imageDataUrl = ev.target.result; renderChangeItems(); };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(e, id) {
+  e.stopPropagation();
+  const item = changeItems.find(c => c.id === id);
+  if (item) { item.imageFile = null; item.imageDataUrl = null; renderChangeItems(); }
+}
+
+// Paste handler — paste image into the first unfilled change item
+document.addEventListener('paste', e => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      // Find first change item without an image
+      const target = changeItems.find(c => !c.imageFile) || changeItems[changeItems.length - 1];
+      if (target) {
+        setImageForItem(target.id, file);
+        showToast('Screenshot pasted into Change '+(changeItems.indexOf(target)+1));
+      }
+      break;
+    }
+  }
+});
+
+async function uploadImage(file, entryId, changeIdx) {
+  const ext = file.name.split('.').pop() || 'png';
+  const path = `${entryId}/${changeIdx}-${Date.now()}.${ext}`;
+  const res = await fetch(`${STORAGE}/${path}`, {
+    method: 'POST',
+    headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer '+ANON_KEY, 'Content-Type': file.type, 'x-upsert': 'true' },
+    body: file
+  });
+  if (!res.ok) throw new Error('Image upload failed: '+await res.text());
+  return `${STORAGE_PUBLIC}/${path}`;
+}
+
+async function submitEntry() {
+  const title = document.getElementById('e-title').value.trim();
+  const category = document.getElementById('e-cat').value.trim();
+  if (!title) { flashField('e-title'); return; }
+  if (!selectedType) { showToast('Pick a change type', 'ti-alert-circle'); return; }
+  if (!category) { flashField('e-category'); return; }
+  const validChanges = changeItems.filter(c => c.desc.trim());
+  if (!validChanges.length) { showToast('Add at least one change description', 'ti-alert-circle'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Saving...';
+
+  try {
+    const entryRow = {
+      title, type: selectedType, category,
+      rationale: document.getElementById('e-note').value.trim() || null,
+      author: document.getElementById('e-author').value.trim() || 'Haley',
+      date: document.getElementById('e-date').value || today(),
+      version: null
+    };
+    const created = await sbFetch(REST+'/changelog', { method:'POST', body:JSON.stringify(entryRow) });
+    const entry = Array.isArray(created) ? created[0] : created;
+
+    for (let i = 0; i < validChanges.length; i++) {
+      const c = validChanges[i];
+      let imageUrl = null;
+      if (c.imageFile) {
+        try { imageUrl = await uploadImage(c.imageFile, entry.id, i); } catch(e) { console.warn('Image upload failed', e); }
+      }
+      await sbFetch(REST+'/changelog_changes', {
+        method:'POST',
+        body:JSON.stringify({ entry_id:entry.id, description:c.desc.trim(), figma:c.figma.trim()||null, image_url:imageUrl })
+      });
+    }
+
+    await loadEntries();
+    resetForm();
+    showToast('Entry saved');
+    document.getElementById('feed-panel').scrollTop = 0;
+  } catch(e) {
+    console.error(e);
+    showToast('Error saving: '+e.message, 'ti-alert-circle');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-check"></i> Save Entry';
+  }
+}
+
+function resetForm() {
+  document.getElementById('e-title').value = '';
+  document.getElementById('e-note').value = '';
+  document.getElementById('e-cat').value = '';
+  document.getElementById('e-author').value = '';
+  document.getElementById('title-count').textContent = '0 / 120';
+  selectedType = '';
+  document.querySelectorAll('.type-pill').forEach(p => p.className = 'type-pill');
+  initForm();
+}
+
+// ── INLINE ADD CHANGE TO EXISTING ENTRY ──
+function openAddChange(entryId) {
+  closeAllAddChangeForms();
+  const el = document.getElementById('add-change-inline-'+entryId);
+  if (el) el.classList.add('open');
+}
+
+function closeAllAddChangeForms() {
+  document.querySelectorAll('.add-change-inline').forEach(el => el.classList.remove('open'));
+}
+
+async function saveInlineChange(entryId) {
+  const desc = document.getElementById('inline-desc-'+entryId).value.trim();
+  if (!desc) { showToast('Add a description', 'ti-alert-circle'); return; }
+  const figma = document.getElementById('inline-figma-'+entryId).value.trim();
+  const imgInput = document.getElementById('inline-img-'+entryId);
+  const pasteArea = document.getElementById('inline-paste-'+entryId);
+
+  const btn = document.getElementById('inline-save-'+entryId);
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  try {
+    let imageUrl = null;
+    const file = imgInput?.files[0] || (pasteArea?._pastedFile);
+    if (file) {
+      try { imageUrl = await uploadImage(file, entryId, Date.now()); } catch(e) { console.warn(e); }
+    }
+    await sbFetch(REST+'/changelog_changes', {
+      method:'POST',
+      body:JSON.stringify({ entry_id:entryId, description:desc, figma:figma||null, image_url:imageUrl })
+    });
+    await loadEntries();
+    showToast('Change added');
+  } catch(e) {
+    showToast('Error: '+e.message, 'ti-alert-circle');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+// ── RENDER FEED ──
+function renderFeed() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const fType  = document.getElementById('filter-type').value;
+  const fCat   = document.getElementById('filter-category').value;
+  const fFrom  = document.getElementById('f-from').value;
+  const fTo    = document.getElementById('f-to').value;
+  const clearBtn = document.getElementById('clear-date-btn');
+  if (clearBtn) clearBtn.style.display = (fFrom||fTo) ? 'inline-flex' : 'none';
+
+  const filtered = allEntries.filter(e => {
+    const d = (e.date||e.created_at||'').slice(0,10);
+    return (!search || (e.title||'').toLowerCase().includes(search) || (e.rationale||'').toLowerCase().includes(search) || (e.category||'').toLowerCase().includes(search) || (e.changes||[]).some(c=>(c.description||'').toLowerCase().includes(search))) &&
+      (!fType || e.type===fType) && (!fCat || e.category===fCat) &&
+      (!fFrom || d>=fFrom) && (!fTo || d<=fTo);
+  });
+
+  const counts = {Component:0,Flow:0,Screen:0,Decision:0};
+  allEntries.forEach(e => { if(counts[e.type]!==undefined) counts[e.type]++; });
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-chip"><strong>${allEntries.length}</strong> entries</div>
+    <div class="stat-chip"><strong>${allEntries.reduce((s,e)=>s+(e.changes||[]).length,0)}</strong> changes</div>
+    <div class="stat-chip"><strong>${counts.Component}</strong> components</div>
+    <div class="stat-chip"><strong>${counts.Flow}</strong> flows</div>
+    <div class="stat-chip"><strong>${counts.Screen}</strong> screens</div>
+    <div class="stat-chip"><strong>${counts.Decision}</strong> decisions</div>`;
+
+  if (!filtered.length) {
+    document.getElementById('feed').innerHTML = `<div class="empty-state"><i class="ti ti-file-description"></i><p>No entries found</p><span>${allEntries.length?'Adjust filters.':'Log your first change using the form.'}</span></div>`;
+    return;
+  }
+
+  const tagCls = {Component:'tag-component',Flow:'tag-flow',Screen:'tag-screen',Decision:'tag-decision'};
+  document.getElementById('feed').innerHTML = filtered.map(e => {
+    const d = (e.date||e.created_at||'').slice(0,10);
+    const changes = e.changes || [];
+    return `
+    <div class="card" data-type="${esc(e.type)}">
+      <div class="card-head">
+        <div class="card-top">
+          <span class="entry-tag ${tagCls[e.type]||'tag-decision'}">${esc(e.type)}</span>
+          <div class="card-title">${esc(e.title)}</div>
+          <div class="card-actions">
+            <button class="act del" title="Delete entry" onclick="deleteEntry('${e.id}')"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="cat-badge">${esc(e.category)}</span>
+          ${e.author?`<span class="meta-item"><i class="ti ti-user"></i>${esc(e.author)}</span>`:''}
+          ${d?`<span class="meta-item"><i class="ti ti-calendar"></i>${fmtDate(d)}</span>`:''}
+          <span class="meta-item"><i class="ti ti-list-check"></i>${changes.length} change${changes.length!==1?'s':''}</span>
+        </div>
+        ${e.rationale?`<div class="card-note">${esc(e.rationale)}</div>`:''}
+      </div>
+      <table class="changes-table"><thead><tr><th class="th-num">#</th><th>Description</th><th class="th-img">Preview</th><th class="th-figma">Link</th><th class="th-del"></th></tr></thead><tbody>
+        
+        ${changes.map((c,i) => `
+          <tr>
+            <td class="td-num"><div class="row-num">${i+1}</div></td>
+            <td class="td-desc"><div class="row-desc">${esc(c.description)}</div></td>
+              <td class="td-img">${c.image_url?`<img class="row-thumb" src="${esc(c.image_url)}" onclick="openLightbox('${esc(c.image_url)}')" loading="lazy">`:`<div class="row-no-img"><i class="ti ti-photo"></i></div>`}</td>
+              <td class="td-figma">${c.figma?`<a class="row-figma" href="${esc(c.figma)}" target="_blank" rel="noopener"><i class="ti ti-brand-figma"></i>Figma</a>`:''}</td>
+              <td class="td-del"><button class="act del row-del" onclick="deleteChange('${c.id}')"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="add-bar">
+        <button class="btn btn-ghost btn-sm" onclick="openAddChange('${e.id}')">
+          <i class="ti ti-plus"></i> Add change
+        </button>
+      </div>
+      <div class="add-change-inline" id="add-change-inline-${e.id}">
+        <div class="form-group" style="margin-bottom:8px;">
+          <textarea id="inline-desc-${e.id}" placeholder="Describe this change..." rows="2" style="min-height:56px;"></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <input type="url" id="inline-figma-${e.id}" placeholder="Figma link (optional)">
+        </div>
+        <div class="img-drop" id="inline-img-area-${e.id}"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleInlineDrop(event,'${e.id}')">
+          <div class="upload-hint"><i class="ti ti-photo"></i>Click to upload or drag image</div>
+          <input type="file" accept="image/*" id="inline-img-${e.id}" onchange="handleInlineFileSelect(event,'${e.id}')">
+        </div>
+        <p class="paste-hint">or <kbd>⌘V</kbd> to paste a screenshot</p>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn btn-primary btn-sm" id="inline-save-${e.id}" onclick="saveInlineChange('${e.id}')">Save</button>
+          <button class="btn btn-ghost btn-sm" onclick="closeAllAddChangeForms()">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Inline image handling
+function handleInlineFileSelect(e, entryId) {
+  const file = e.target.files[0];
+  if (file) setInlineImage(entryId, file);
+}
+
+function handleInlineDrop(e, entryId) {
+  e.preventDefault();
+  document.getElementById('inline-img-area-'+entryId)?.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) setInlineImage(entryId, file);
+}
+
+function setInlineImage(entryId, file) {
+  const area = document.getElementById('inline-img-area-'+entryId);
+  if (!area) return;
+  area._pastedFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    area.classList.add('has-image');
+    area.innerHTML = `<img class="img-preview" src="${ev.target.result}" alt="preview"><button class="img-remove" onclick="clearInlineImage('${entryId}',event)"><i class="ti ti-x"></i></button>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearInlineImage(entryId, e) {
+  e.stopPropagation();
+  const area = document.getElementById('inline-img-area-'+entryId);
+  if (area) {
+    area._pastedFile = null;
+    area.classList.remove('has-image');
+    area.innerHTML = `<div class="upload-hint"><i class="ti ti-photo"></i>Click to upload or drag image</div><input type="file" accept="image/*" id="inline-img-${entryId}" onchange="handleInlineFileSelect(event,'${entryId}')">`;
+  }
+}
+
+// Paste into inline forms
+document.addEventListener('paste', e => {
+  const openForms = document.querySelectorAll('.add-change-inline.open');
+  if (!openForms.length) return;
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      const form = openForms[0];
+      const entryId = form.id.replace('add-change-inline-','');
+      setInlineImage(entryId, file);
+      showToast('Screenshot pasted');
+      break;
+    }
+  }
+});
+
+// ── DELETE ──
+function deleteEntry(id) { deleteEntryTarget = id; document.getElementById('del-entry-ov').classList.add('open'); }
+async function confirmDeleteEntry() {
+  try {
+    await sbFetch(REST+'/changelog?id=eq.'+deleteEntryTarget, {method:'DELETE', headers:{...H,'Prefer':'return=minimal'}});
+    allEntries = allEntries.filter(e => e.id !== deleteEntryTarget);
+    renderFeed(); closeModals(); showToast('Entry deleted','ti-trash');
+  } catch(e) { showToast('Error: '+e.message,'ti-alert-circle'); closeModals(); }
+}
+
+function deleteChange(id) { deleteChangeTarget = id; document.getElementById('del-change-ov').classList.add('open'); }
+async function confirmDeleteChange() {
+  try {
+    await sbFetch(REST+'/changelog_changes?id=eq.'+deleteChangeTarget, {method:'DELETE', headers:{...H,'Prefer':'return=minimal'}});
+    allEntries = allEntries.map(e => ({...e, changes:(e.changes||[]).filter(c=>c.id!==deleteChangeTarget)}));
+    renderFeed(); closeModals(); showToast('Change deleted','ti-trash');
+  } catch(e) { showToast('Error: '+e.message,'ti-alert-circle'); closeModals(); }
+}
+
+function closeModals() {
+  document.querySelectorAll('.overlay').forEach(m => m.classList.remove('open'));
+  deleteEntryTarget = null; deleteChangeTarget = null;
+}
+
+// ── CATEGORIES ──
+const DEFAULT_CATS = ['Registration','Onboarding','Onboarding → For Muscle and Joint Pain Relief','Onboarding → For Work and Life Prevention','Onboarding → For Rehabilitation + Lifestyle and Maintenance','Onboarding → For Pelvic Health','Care Plan Section','Care Plan Section → Care Plan Generation (Animation)','Care Plan Section → Care Plan Generated','Dashboard','Dashboard → Manage Dashboard','Dashboard → Clinical Red Flags (WIP)','MSK Programs','MSK Programs → Manage Programs','MSK Programs → Add New/Recommended Program','MSK Sessions Section','MSK Sessions Section → Complete User Flow','MSK Sessions Section → In-Session','MSK Sessions Section → My Journey','MSK Sessions Section → Session History','MSK Sessions Section → Download Session Offline','MSK Sessions Section → Post Session','MSK Sessions Section → ADLS','MSK Sessions Section → Edge Cases','MSK Virtual Ergonomic','MSK Virtual Ergonomic → Pre VErgo Meet (Assessment)','MSK Virtual Ergonomic → In-VErgo Meet','Care Pack','Reminders','Sara Bot','Benefits Card','RICE','RICE → RICE Onboarding','RICE → RICE Day to Day Triggers','RICE → Manage RICE','Video Visits','Video Visits → Onboarding Video Visit','Video Visits → Chat with Coach','Profile','Progress Check-In','Progress Check-In → 30 & 90 Days','Progress Check-In → 60 & 120 Days','QA'];
+
+function getCategories() {
+  try { const s = localStorage.getItem(CAT_KEY); if(s) return JSON.parse(s); } catch(e) {}
+  return [...DEFAULT_CATS];
+}
+function saveCategories(cats) { localStorage.setItem(CAT_KEY, JSON.stringify(cats)); }
+
+function acFilter(val) {
+  const box = document.getElementById('ac-drop');
+  const q = val.trim().toLowerCase();
+  const cats = getCategories();
+  const show = q ? cats.filter(c=>c.toLowerCase().includes(q)) : cats;
+  if (!show.length) { box.style.display='none'; return; }
+  box.innerHTML = show.map(c=>`<div class="cat-option" onmousedown="acPick('${c.replace(/'/g,"\\'")}')">${hlCat(c,q)}</div>`).join('');
+  box.style.display = 'block';
+}
+
+function hlCat(text, q) {
+  if (!q) return esc(text);
+  const i = text.toLowerCase().indexOf(q);
+  if (i===-1) return esc(text);
+  return esc(text.slice(0,i))+'<strong>'+esc(text.slice(i,i+q.length))+'</strong>'+esc(text.slice(i+q.length));
+}
+
+function acPick(val) {
+  document.getElementById('e-cat').value = val;
+  acHide();
+}
+
+function acHide() {
+  setTimeout(()=>{ const b=document.getElementById('ac-drop'); if(b) b.style.display='none'; }, 150);
+}
+
+function openManageCategories() {
+  renderCatList();
+  document.getElementById('cat-ov').classList.add('open');
+}
+
+function renderCatList() {
+  const cats = getCategories();
+  document.getElementById('cat-list').innerHTML = cats.length
+    ? cats.map((c,i)=>`<div class="cat-manage-row"><span class="cat-manage-name">${esc(c)}</span><button class="cat-manage-del" onclick="deleteCategory(${i})"><i class="ti ti-trash"></i></button></div>`).join('')
+    : '<p style="font-size:13px;color:var(--grey2);padding:8px 0;">No categories yet.</p>';
+}
+
+function addCategory() {
+  const input = document.getElementById('new-cat');
+  const val = input.value.trim();
+  if (!val) return;
+  const cats = getCategories();
+  if (cats.includes(val)) { showToast('Already exists','ti-alert-circle'); return; }
+  cats.push(val);
+  saveCategories(cats);
+  input.value = '';
+  renderCatList();
+  showToast('Category added');
+}
+
+function deleteCategory(idx) {
+  const cats = getCategories();
+  cats.splice(idx,1);
+  saveCategories(cats);
+  renderCatList();
+  showToast('Removed','ti-trash');
+}
+
+// ── DATE FILTER ──
+function clearDateFilter() {
+  document.getElementById('f-from').value='';
+  document.getElementById('f-to').value='';
+  document.getElementById('clear-date-btn').style.display='none';
+  renderFeed();
+}
+
+// ── LIGHTBOX ──
+function openLightbox(url) {
+  document.getElementById('lb-img').src = url;
+  document.getElementById('lb').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lb').classList.remove('open'); }
+
+// ── TYPE SELECT ──
+function selType(el) {
+  document.querySelectorAll('.type-pill').forEach(p=>p.className='type-pill');
+  selectedType = el.dataset.type;
+  el.classList.add('selected-'+selectedType.toLowerCase());
+}
+
+// ── HELPERS ──
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(d){ if(!d) return ''; const [y,m,day]=d.split('-'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+parseInt(day)+', '+y; }
+function flashField(id){ const el=document.getElementById(id); el.style.borderColor='var(--red)'; setTimeout(()=>el.style.borderColor='',1500); showToast('Required field','ti-alert-circle'); }
+function showToast(msg,icon='ti-check'){ const t=document.getElementById('toast'); t.innerHTML=`<i class="ti ${icon}"></i> ${msg}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+
+// ── PDF EXPORT ──
+function exportPDF() {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210, M=16, CW=W-M*2;
+  let y=20;
+
+  const fType=document.getElementById('filter-type').value;
+  const fCat=document.getElementById('filter-category').value;
+  const search=document.getElementById('search-input').value.toLowerCase();
+  const filtered=allEntries.filter(e=>(!search||(e.title||'').toLowerCase().includes(search))&&(!fType||e.type===fType)&&(!fCat||e.category===fCat));
+
+  doc.setFontSize(20);doc.setFont('helvetica','bold');doc.setTextColor(0,27,54);
+  doc.text('ST Design Changelog',M,y); y+=7;
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(132,150,168);
+  doc.text(`SimpleTherapy   ·   Exported ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}   ·   ${filtered.length} entries`,M,y); y+=4;
+  doc.setDrawColor(199,207,217);doc.setLineWidth(0.3);doc.line(M,y+1,W-M,y+1); y+=7;
+
+  const typeColors={Component:[13,110,153],Flow:[92,31,160],Screen:[181,66,0],Decision:[6,132,90]};
+
+  filtered.forEach((e,ei)=>{
+    const titleLines=doc.splitTextToSize(e.title||'',CW-26);
+    const rLines=e.rationale?doc.splitTextToSize(e.rationale,CW):[];
+    const chLines=(e.changes||[]).reduce((s,c)=>s+doc.splitTextToSize('• '+(c.description||''),CW-4).length,0);
+    const blockH=8+titleLines.length*5.5+(rLines.length?rLines.length*4+3:0)+(chLines*4.5)+8;
+    if(y+blockH>277){doc.addPage();y=16;}
+
+    const col=typeColors[e.type]||[82,99,118];
+    doc.setFillColor(...col);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
+    const tw=doc.getTextWidth((e.type||'').toUpperCase())+6;
+    doc.roundedRect(M,y-3.5,tw,5.5,1.5,1.5,'F');
+    doc.text((e.type||'').toUpperCase(),M+3,y+0.5);
+
+    doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(0,27,54);
+    doc.text(titleLines,M+tw+4,y); y+=titleLines.length*5.5+1;
+
+    doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(132,150,168);
+    const meta=[e.category,e.author,e.date?fmtDate(e.date.slice(0,10)):''].filter(Boolean).join('   ·   ');
+    doc.text(meta,M,y); y+=5;
+
+    if(rLines.length){doc.setFontSize(9.5);doc.setTextColor(82,99,118);doc.text(rLines,M,y);y+=rLines.length*4+2;}
+
+    (e.changes||[]).forEach((c,ci)=>{
+      const cl=doc.splitTextToSize(`${ci+1}. ${c.description||''}`,CW-4);
+      if(y+cl.length*4.5>277){doc.addPage();y=16;}
+      doc.setFontSize(9.5);doc.setFont('helvetica','normal');doc.setTextColor(0,27,54);
+      doc.text(cl,M+4,y); y+=cl.length*4.5;
+      if(c.figma){doc.setFontSize(8);doc.setTextColor(30,165,222);doc.text('↗ Figma',M+8,y);doc.link(M+8,y-3,16,4,{url:c.figma});y+=4;}
+      if(c.image_url){doc.setFontSize(8);doc.setTextColor(132,150,168);doc.text('[image attached — view online]',M+8,y);y+=4;}
+    });
+
+    if(ei<filtered.length-1){doc.setDrawColor(236,242,246);doc.setLineWidth(0.3);doc.line(M,y+2,W-M,y+2);y+=7;}
+  });
+
+  doc.save('st-changelog-'+today()+'.pdf');
+  showToast('PDF exported');
+}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModals();closeAllAddChangeForms();closeLightbox();}
+});
+document.querySelectorAll('.overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)closeModals();}));
+document.getElementById('lb').addEventListener('click',function(e){if(e.target===this)closeLightbox();});
+document.getElementById('e-title').addEventListener('input',function(){document.getElementById('title-count').textContent=this.value.length+' / 120';});
+
+// ── FILTER HELPERS ──
+  function toggleDatePopover(e) {
+    e.stopPropagation();
+    document.getElementById('date-pop').classList.toggle('open');
+  }
+  function closeDatePopover() {
+    document.getElementById('date-pop').classList.remove('open');
+  }
+  document.addEventListener('click', function(e) {
+    const w = document.getElementById('date-wrap');
+    if (w && !w.contains(e.target)) closeDatePopover();
+  });
+  function fmtDateShort(d) {
+    if (!d) return '';
+    const [y,m,day] = d.split('-');
+    return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+parseInt(day);
+  }
+  function updateDateActive() {
+    const from = document.getElementById('f-from').value;
+    const to   = document.getElementById('f-to').value;
+    const btn  = document.getElementById('date-btn');
+    const lbl  = document.getElementById('date-lbl');
+    if (btn) btn.classList.toggle('active', !!(from||to));
+    if (lbl) {
+      if (from && to) lbl.textContent = fmtDateShort(from)+' – '+fmtDateShort(to);
+      else if (from)  lbl.textContent = 'From '+fmtDateShort(from);
+      else if (to)    lbl.textContent = 'To '+fmtDateShort(to);
+      else            lbl.textContent = 'Date range';
+    }
+  }
+  function updatePill(key, sel) {
+    const pill = document.getElementById('pill-'+key);
+    const lbl  = document.getElementById('pill-'+key+'-label');
+    if (!pill||!lbl) return;
+    if (sel.value) { pill.classList.add('active'); lbl.textContent = sel.value.length>14 ? sel.value.slice(0,13)+'…' : sel.value; }
+    else           { pill.classList.remove('active'); lbl.textContent = key==='type'?'Type':'Page'; }
+  }
+
+// ── INIT ──
+initForm();
+loadEntries();
+
+</script>
+</body>
+</html>
