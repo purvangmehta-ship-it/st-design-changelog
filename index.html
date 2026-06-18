@@ -160,13 +160,14 @@ body{font-family:'Avenir Next',-apple-system,sans-serif;background:var(--grey5);
 .change-row{padding:12px 18px;border-bottom:1.5px solid var(--grey4);display:flex;gap:12px;align-items:flex-start;}
 .change-row:last-child{border-bottom:none;}
 .change-index{width:22px;height:22px;border-radius:50%;background:var(--grey4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--grey1);flex-shrink:0;margin-top:1px;}
-.change-body{flex:1;min-width:0;}
+.change-body{flex:1;min-width:0;display:flex;align-items:flex-start;gap:10px;}
+.change-body-text{flex:1;min-width:0;}
 .change-desc{font-size:14px;font-weight:500;color:var(--black);line-height:1.5;margin-bottom:6px;}
-.change-img-wrap{position:relative;display:inline-block;margin-bottom:8px;cursor:pointer;}
+.change-img-wrap{position:relative;flex-shrink:0;cursor:pointer;}
 .change-img-wrap:hover .img-expand-hint{opacity:1;}
 .img-expand-hint{position:absolute;inset:0;background:rgba(0,27,54,0.35);border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s;pointer-events:none;}
-.img-expand-hint i{font-size:22px;color:var(--white);}
-.change-img{width:auto;max-width:280px;max-height:140px;object-fit:cover;border-radius:8px;border:1.5px solid var(--grey4);display:block;box-shadow:var(--shadow-low);}
+.img-expand-hint i{font-size:18px;color:var(--white);}
+.change-img{width:120px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--grey4);display:block;box-shadow:var(--shadow-low);}
 .change-img:hover{opacity:0.92;}
 .change-figma{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--blue);text-decoration:none;padding:4px 10px;border-radius:100px;background:var(--light-blue);}
 .change-figma:hover{background:#d4eef9;}
@@ -743,9 +744,11 @@ function renderFeed() {
           <div class="change-row">
             <div class="change-index">${i+1}</div>
             <div class="change-body">
-              <div class="change-desc">${esc(c.description)}</div>
+              <div class="change-body-text">
+                <div class="change-desc">${esc(c.description)}</div>
+                ${c.figma?`<a class="change-figma" href="${esc(c.figma)}" target="_blank" rel="noopener"><i class="ti ti-brand-figma"></i>Open in Figma</a>`:''}
+              </div>
               ${c.image_url?`<div class="change-img-wrap" onclick="openLightbox('${esc(c.image_url)}')"><img class="change-img" src="${esc(c.image_url)}" alt="change screenshot" loading="lazy"><div class="img-expand-hint"><i class="ti ti-arrows-maximize"></i></div></div>`:''}
-              ${c.figma?`<a class="change-figma" href="${esc(c.figma)}" target="_blank" rel="noopener"><i class="ti ti-brand-figma"></i>Open in Figma</a>`:''}
             </div>
             <div class="change-row-actions">
               <button class="action-btn delete" title="Delete change" onclick="deleteChange('${c.id}')"><i class="ti ti-trash"></i></button>
