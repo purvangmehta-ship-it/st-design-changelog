@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ST Design Changelog</title>
+<link href="https://fonts.cdnfonts.com/css/avenir-next" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue:#1ea5de; --light-blue:#e9f6fc; --black:#001b36;
+  --grey0:#3d4f62; --grey1:#526376; --grey2:#8496a8;
+  --grey3:#c7cfd9; --grey4:#ecf2f6; --grey5:#f6f9fb; --grey6:#fafafa;
+  --white:#ffffff; --green:#2eb695; --dark-green:#06845a; --light-green:#ebf8f5;
+  --purple:#814adf; --light-purple:#f2edfc;
+  --dark-red:#c83739; --light-red:#fff1f2; --red:#ff7678; --orange:#ff790c;
+  --shadow-low:0px 2px 4px rgba(0,27,54,0.08);
+  --shadow-med:0px 2px 8px rgba(0,27,54,0.08);
+  --shadow-high:0px 2px 16px rgba(0,27,54,0.08);
+}
+html,body{height:100%;}
+body{font-family:'Avenir Next',-apple-system,sans-serif;background:var(--grey5);color:var(--black);font-size:16px;letter-spacing:-0.02em;line-height:1.4;}
+
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:1.5px solid var(--grey4);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-low);}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-logo{background:var(--black);color:var(--white);font-size:12px;font-weight:700;letter-spacing:0.04em;padding:5px 10px;border-radius:7px;}
+.topbar-title{font-size:18px;font-weight:700;color:var(--black);}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:100px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:'Avenir Next',sans-serif;letter-spacing:-0.02em;transition:all 0.15s;white-space:nowrap;}
+.btn-primary{background:var(--blue);color:var(--white);}
+.btn-primary:hover{background:#198fbf;}
+.btn-primary:disabled{background:var(--grey3);cursor:not-allowed;}
+.btn-ghost{background:transparent;color:var(--grey1);border:1.5px solid var(--grey3);}
+.btn-ghost:hover{background:var(--grey5);border-color:var(--grey2);}
+.btn-sm{padding:6px 12px;font-size:13px;}
+.btn-danger{background:var(--light-red);color:var(--dark-red);border:1.5px solid var(--red);}
+.btn-danger:hover{background:#ffe0e0;}
+.btn-green{background:var(--light-green);color:var(--dark-green);border:1.5px solid var(--green);}
+.btn-green:hover{background:#d4f3ec;}
+
+/* LAYOUT */
+.app-layout{display:grid;grid-template-columns:360px 1fr;gap:0;height:calc(100vh - 60px);overflow:hidden;}
+
+/* FORM PANEL */
+.form-panel{background:var(--white);border-right:1.5px solid var(--grey4);overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:0;}
+.form-section-title{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--grey2);margin-bottom:14px;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:13px;font-weight:700;color:var(--grey0);margin-bottom:5px;}
+.form-label span{color:var(--red);margin-left:2px;}
+.required-note{font-size:12px;color:var(--grey2);margin-bottom:14px;}
+
+.form-panel input[type="text"],.form-panel input[type="url"],.form-panel input[type="date"],.form-panel textarea,.form-panel select,.date-popover input[type="date"],.add-change-inline input[type="text"],.add-change-inline input[type="url"],.add-change-inline textarea,.change-item-form input[type="text"],.change-item-form input[type="url"],.change-item-form textarea{width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid var(--grey3);font-family:'Avenir Next',sans-serif;font-size:14px;font-weight:500;color:var(--black);background:var(--white);letter-spacing:-0.02em;transition:border-color 0.15s;outline:none;-webkit-appearance:none;appearance:none;}
+.form-panel input[type="text"]:focus,.form-panel input[type="url"]:focus,.form-panel input[type="date"]:focus,.form-panel textarea:focus,.form-panel select:focus,.date-popover input[type="date"]:focus,.add-change-inline input:focus,.add-change-inline textarea:focus,.change-item-form input:focus,.change-item-form textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,165,222,0.12);}
+.form-panel textarea,.add-change-inline textarea,.change-item-form textarea{resize:vertical;min-height:72px;line-height:1.5;}
+.form-panel select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238496a8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer;}
+.date-popover input[type="date"]{font-size:13px;color:var(--grey0);padding:8px 10px;}
+
+.type-pills{display:flex;flex-wrap:wrap;gap:7px;}
+.type-pill{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid var(--grey3);color:var(--grey1);background:var(--white);transition:all 0.15s;user-select:none;}
+.type-pill:hover{background:var(--grey5);border-color:var(--grey2);}
+.type-pill.selected-component{background:var(--light-blue);color:#0d6e99;border-color:var(--blue);}
+.type-pill.selected-flow{background:var(--light-purple);color:#5c1fa0;border-color:var(--purple);}
+.type-pill.selected-screen{background:#fff3eb;color:#b54200;border-color:var(--orange);}
+.type-pill.selected-decision{background:var(--light-green);color:var(--dark-green);border-color:var(--green);}
+
+.form-divider{height:1px;background:var(--grey4);margin:16px 0;}
+.char-count{font-size:12px;color:var(--grey2);text-align:right;margin-top:3px;}
+
+/* AUTOCOMPLETE */
+.autocomplete-wrap{position:relative;}
+.cat-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);border:1.5px solid var(--blue);border-radius:8px;box-shadow:var(--shadow-high);z-index:50;max-height:200px;overflow-y:auto;}
+.cat-option{padding:8px 14px;font-size:14px;font-weight:500;cursor:pointer;color:var(--black);transition:background 0.1s;}
+.cat-option:hover{background:var(--grey5);}
+.cat-option strong{color:var(--blue);font-weight:700;}
+
+/* CHANGES SECTION IN FORM */
+.changes-section{background:var(--grey5);border-radius:10px;padding:14px;margin-bottom:14px;}
+.changes-section-head{font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--grey2);margin-bottom:12px;}
+.change-item-form{background:var(--white);border-radius:8px;padding:12px;margin-bottom:10px;border:1.5px solid var(--grey4);position:relative;}
+.change-item-num{font-size:11px;font-weight:700;color:var(--grey2);margin-bottom:8px;letter-spacing:0.04em;text-transform:uppercase;}
+.change-item-remove{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:6px;border:1.5px solid var(--grey3);background:var(--white);color:var(--grey2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all 0.15s;}
+.change-item-remove:hover{background:var(--light-red);color:var(--dark-red);border-color:var(--red);}
+
+/* IMAGE UPLOAD */
+.img-upload-area{border:1.5px dashed var(--grey3);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--grey6);position:relative;margin-top:8px;}
+.img-upload-area:hover,.img-upload-area.drag-over{border-color:var(--blue);background:var(--light-blue);}
+.img-upload-area.has-image{border-style:solid;border-color:var(--green);background:var(--white);padding:6px;}
+.img-upload-area .upload-hint{font-size:12px;color:var(--grey2);font-weight:500;pointer-events:none;}
+.img-upload-area .upload-hint i{font-size:20px;display:block;margin-bottom:4px;color:var(--grey3);}
+.img-upload-area input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.img-preview{width:100%;border-radius:6px;max-height:120px;object-fit:cover;display:block;}
+.img-remove-btn{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,27,54,0.6);color:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;border:none;}
+.paste-hint{font-size:11px;color:var(--grey2);text-align:center;margin-top:4px;}
+.paste-hint kbd{background:var(--grey4);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:11px;color:var(--grey1);}
+
+/* FEED PANEL */
+.feed-panel{overflow-y:auto;padding:16px 20px;background:var(--grey5);}
+
+/* FILTER BAR */
+.filter-bar{background:var(--white);border-radius:10px;box-shadow:var(--shadow-low);padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.fb-search-wrap{position:relative;width:200px;flex-shrink:0;}
+.fb-search-wrap .fb-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--grey2);pointer-events:none;}
+.search-input{width:100%;padding:7px 10px 7px 32px !important;border-radius:8px;border:1.5px solid var(--grey3);font-family:'Avenir Next',sans-serif;font-size:13px;font-weight:500;color:var(--black);background:var(--white);letter-spacing:-0.02em;outline:none;transition:border-color 0.15s;box-shadow:none !important;}
+.search-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,165,222,0.10) !important;}
+.fb-sep{width:1px;height:20px;background:var(--grey4);flex-shrink:0;}
+.filter-pill{position:relative;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--grey4);background:var(--grey5);font-family:'Avenir Next',sans-serif;font-size:12px;font-weight:700;color:var(--grey1);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.15s;}
+.filter-pill:hover{border-color:var(--grey3);background:var(--grey4);}
+.filter-pill select{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:13px;width:100%;height:100%;margin:0;padding:0;border:none;background:none;}
+.filter-pill .fp-chevron{font-size:10px;color:var(--grey3);}
+.filter-pill.active{border-color:var(--blue);background:var(--light-blue);color:#0d7db5;}
+.filter-pill.active .fp-chevron{color:#1ea5de;}
+.fb-date-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--grey4);background:var(--grey5);font-family:'Avenir Next',sans-serif;font-size:12px;font-weight:700;color:var(--grey1);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.15s;position:relative;}
+.fb-date-btn:hover{border-color:var(--grey3);background:var(--grey4);}
+.fb-date-btn i{font-size:13px;color:var(--grey2);}
+.fb-date-btn.active{border-color:var(--blue);background:var(--light-blue);color:#0d7db5;}
+.fb-date-btn.active i{color:var(--blue);}
+.date-popover{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--white);border:1.5px solid var(--grey3);border-radius:10px;box-shadow:var(--shadow-high);padding:14px 16px;z-index:200;width:260px;}
+.date-popover.open{display:block;}
+.date-popover-row{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.date-popover-row:last-child{margin-bottom:0;}
+.date-popover label{font-size:11px;font-weight:700;color:var(--grey2);letter-spacing:0.05em;text-transform:uppercase;}
+
+.date-popover-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--grey4);}
+.clear-date-btn{background:none;border:none;cursor:pointer;color:var(--grey2);font-size:11px;padding:0;display:none;line-height:1;}
+
+.feed-stats{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.stat-chip{background:var(--white);border:1.5px solid var(--grey4);border-radius:8px;padding:6px 11px;font-size:12px;color:var(--grey1);font-weight:500;}
+.stat-chip strong{font-weight:700;color:var(--black);margin-right:4px;}
+
+/* ENTRY CARD */
+.entry-card{background:var(--white);border-radius:10px;box-shadow:var(--shadow-low);margin-bottom:8px;border:1px solid var(--grey4);transition:all 0.15s;overflow:hidden;}
+.entry-card:hover{border-color:var(--blue);box-shadow:var(--shadow-med);}
+.entry-header{padding:12px 16px 10px;border-bottom:1px solid var(--grey4);}
+.entry-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.entry-tag{font-size:11px;font-weight:700;letter-spacing:0.04em;padding:3px 9px;border-radius:6px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.tag-component{background:var(--light-blue);color:#0d6e99;}
+.tag-flow{background:var(--light-purple);color:#5c1fa0;}
+.tag-screen{background:#fff3eb;color:#b54200;}
+.tag-decision{background:var(--light-green);color:var(--dark-green);}
+.entry-card[data-type="Component"]{border-left:3px solid var(--blue);}
+.entry-card[data-type="Flow"]{border-left:3px solid var(--purple);}
+.entry-card[data-type="Screen"]{border-left:3px solid var(--orange);}
+.entry-card[data-type="Decision"]{border-left:3px solid var(--green);}
+.entry-title{font-size:16px;font-weight:700;color:var(--black);line-height:1.3;flex:1;}
+.entry-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:5px;}
+.entry-meta-item{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--grey2);font-weight:500;}
+.entry-meta-item i{font-size:13px;}
+.category-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:var(--grey4);color:var(--grey1);}
+.entry-rationale{font-size:14px;color:var(--grey1);line-height:1.5;font-weight:500;margin-top:8px;}
+.entry-header-actions{display:flex;gap:6px;opacity:0;transition:opacity 0.15s;flex-shrink:0;}
+.entry-card:hover .entry-header-actions{opacity:1;}
+
+/* CHANGES LIST */
+.changes-list{padding:0;}.changes-list-header{display:flex;align-items:center;gap:10px;padding:6px 16px;background:var(--grey5);border-bottom:1px solid var(--grey4);}.changes-list-header span{font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--grey2);}
+.change-row{padding:12px 18px;border-bottom:1.5px solid var(--grey4);display:flex;gap:12px;align-items:flex-start;}
+.change-row:last-child{border-bottom:none;}
+.change-index{width:22px;height:22px;border-radius:50%;background:var(--grey4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--grey1);flex-shrink:0;margin-top:1px;}
+.change-body{flex:1;min-width:0;display:flex;align-items:center;gap:10px;}
+.change-text{flex:1;min-width:0;}
+.change-desc{font-size:13px;font-weight:500;color:var(--black);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.change-img-wrap{position:relative;flex-shrink:0;cursor:pointer;border-radius:6px;overflow:hidden;border:1px solid var(--grey4);}
+.change-img-wrap:hover .img-expand-hint{opacity:1;}
+.img-expand-hint{position:absolute;inset:0;background:rgba(0,27,54,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s;pointer-events:none;}
+.img-expand-hint i{font-size:16px;color:var(--white);}
+.change-img{width:56px;height:40px;object-fit:cover;display:block;}
+.change-img:hover{opacity:0.92;}
+.change-figma{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--blue);text-decoration:none;padding:3px 8px;border-radius:6px;background:var(--light-blue);white-space:nowrap;flex-shrink:0;}
+.change-figma:hover{background:#d4eef9;}
+.change-row-actions{opacity:0;transition:opacity 0.15s;flex-shrink:0;}
+.change-row:hover .change-row-actions{opacity:1;}
+
+/* ADD CHANGE INLINE */
+.add-change-bar{padding:8px 16px;background:var(--grey6);border-top:1px solid var(--grey4);}
+.add-change-inline{display:none;padding:14px 18px;background:var(--grey5);border-top:1.5px solid var(--grey4);}
+.add-change-inline.open{display:block;}
+
+/* ACTION BUTTONS */
+.action-btn{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--grey3);background:var(--white);color:var(--grey2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;font-size:13px;}
+.action-btn:hover{background:var(--grey5);color:var(--grey0);}
+.action-btn.delete:hover{background:var(--light-red);color:var(--dark-red);border-color:var(--red);}
+
+/* EMPTY + LOADING */
+.empty-state{text-align:center;padding:60px 20px;color:var(--grey2);}
+.empty-state i{font-size:40px;margin-bottom:12px;display:block;}
+.empty-state p{font-size:16px;font-weight:700;color:var(--grey1);margin-bottom:6px;}
+.empty-state span{font-size:14px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--black);color:var(--white);padding:10px 20px;border-radius:100px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:all 0.25s;z-index:999;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,27,54,0.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--white);border-radius:16px;padding:24px;width:480px;max-width:calc(100vw - 32px);box-shadow:var(--shadow-high);transform:translateY(8px);transition:transform 0.2s;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-title{font-size:20px;font-weight:700;color:var(--black);margin-bottom:6px;}
+.modal-sub{font-size:14px;color:var(--grey1);margin-bottom:16px;line-height:1.5;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+.modal-scroll{max-height:300px;overflow-y:auto;}
+
+/* IMAGE LIGHTBOX */
+.inline-img-preview-wrap{position:relative;display:inline-block;}
+.lightbox{position:fixed;inset:0;background:rgba(0,27,54,0.88);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.lightbox.open{opacity:1;pointer-events:all;}
+.lightbox img{max-width:90vw;max-height:88vh;border-radius:10px;box-shadow:var(--shadow-high);}
+.lightbox-close{position:fixed;top:20px;right:24px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);color:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;border:none;transition:background 0.15s;}
+.lightbox-close:hover{background:rgba(255,255,255,0.25);}
+
+/* SYNC */
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;}
+.sync-dot.syncing{background:var(--orange);animation:pulse 1s ease-in-out infinite;}
+.sync-dot.error{background:var(--red);}
+
+/* MANAGE CATEGORIES */
+.cat-manage-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--grey4);}
+.cat-manage-row:last-child{border-bottom:none;}
+.cat-manage-name{flex:1;font-size:14px;font-weight:500;color:var(--black);}
+.cat-manage-del{width:26px;height:26px;border-radius:6px;border:1.5px solid var(--grey3);background:var(--white);color:var(--grey2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all 0.15s;flex-shrink:0;}
+.cat-manage-del:hover{background:var(--light-red);color:var(--dark-red);border-color:var(--red);}
+.cat-add-row{display:flex;gap:8px;margin-top:10px;}
+.cat-add-row input{flex:1;}
+
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--grey3);border-radius:10px;}
+
+@media(max-width:860px){
+  .app-layout{grid-template-columns:1fr;height:auto;overflow:visible;}
+  .form-panel{border-right:none;border-bottom:1.5px solid var(--grey4);}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">ST</div>
+    <div class="topbar-title">Design Changelog</div>
+  </div>
+  <div class="topbar-right">
+    <span style="font-size:13px;color:var(--grey2);display:flex;align-items:center;">
+      <span class="sync-dot syncing" id="sync-dot"></span>
+      <span id="sync-label">Connecting...</span>
+    </span>
+    <button class="btn btn-ghost btn-sm" onclick="loadEntries()" title="Refresh"><i class="ti ti-refresh"></i></button>
+    <button class="btn btn-ghost btn-sm" onclick="openManageCategories()"><i class="ti ti-tags"></i> Categories</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportPDF()"><i class="ti ti-file-type-pdf"></i> Export PDF</button>
+  </div>
+</header>
+
+<div class="app-layout">
+
+  <!-- FORM PANEL -->
+  <aside class="form-panel">
+    <div class="form-section-title">Log a Change</div>
+    <p class="required-note"><span style="color:var(--red)">*</span> Required fields</p>
+
+    <div class="form-group">
+      <label class="form-label" for="e-title">Title <span>*</span></label>
+      <input type="text" id="e-title" placeholder="e.g. Onboarding flow redesign" maxlength="120">
+      <div class="char-count" id="title-count">0 / 120</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Change Type <span>*</span></label>
+      <div class="type-pills">
+        <div class="type-pill" data-type="Component" onclick="selectType(this)">Component</div>
+        <div class="type-pill" data-type="Flow" onclick="selectType(this)">Flow</div>
+        <div class="type-pill" data-type="Screen" onclick="selectType(this)">Screen</div>
+        <div class="type-pill" data-type="Decision" onclick="selectType(this)">Decision</div>
+      </div>
+    </div>
+
+    <div class="form-group autocomplete-wrap">
+      <label class="form-label" for="e-category">Figma Page / Category <span>*</span></label>
+      <input type="text" id="e-category" placeholder="Type or pick a page..." autocomplete="off"
+        oninput="filterSuggestions(this.value)"
+        onfocus="filterSuggestions(this.value)"
+        onblur="hideSuggestions()">
+      <div id="cat-dropdown" class="cat-dropdown"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group">
+        <label class="form-label" for="e-author">Author</label>
+        <input type="text" id="e-author" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="e-date">Date</label>
+        <input type="date" id="e-date">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="e-rationale">Overview / Context</label>
+      <textarea id="e-rationale" placeholder="Brief overview of this change set..." maxlength="400"></textarea>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- CHANGES -->
+    <div class="changes-section">
+      <div class="changes-section-head">Changes <span id="change-count-badge" style="background:var(--blue);color:var(--white);border-radius:100px;padding:1px 8px;font-size:10px;margin-left:4px;">1</span></div>
+      <div id="changes-form-list"></div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;border-style:dashed;" onclick="addChangeItem()">
+        <i class="ti ti-plus"></i> Add another change
+      </button>
+    </div>
+
+    <button class="btn btn-primary" id="submit-btn" style="width:100%;justify-content:center;" onclick="submitEntry()">
+      <i class="ti ti-check"></i> Save Entry
+    </button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;" onclick="resetForm()">Clear form</button>
+  </aside>
+
+  <!-- FEED -->
+  <main class="feed-panel" id="feed-panel">
+    <div class="filter-bar">
+      <div class="fb-search-wrap">
+        <i class="ti ti-search fb-search-icon"></i>
+        <input class="search-input" id="search-input" type="text" placeholder="Search changes..." oninput="renderFeed()">
+      </div>
+      <div class="fb-sep"></div>
+      <label class="filter-pill" id="pill-type">
+        <i class="ti ti-layout-list" style="font-size:12px;color:var(--grey2);"></i>
+        <span id="pill-type-label">Type</span>
+        <i class="ti ti-chevron-down fp-chevron"></i>
+        <select id="filter-type" onchange="updatePill('type',this);renderFeed()">
+          <option value="">All types</option>
+          <option>Component</option><option>Flow</option><option>Screen</option><option>Decision</option>
+        </select>
+      </label>
+      <label class="filter-pill" id="pill-cat">
+        <i class="ti ti-file" style="font-size:12px;color:var(--grey2);"></i>
+        <span id="pill-cat-label">Page</span>
+        <i class="ti ti-chevron-down fp-chevron"></i>
+        <select id="filter-category" onchange="updatePill('cat',this);renderFeed()">
+          <option value="">All pages</option>
+          <option>Registration</option><option>Onboarding</option><option>Care Plan Section</option>
+          <option>Dashboard</option><option>MSK Programs</option><option>MSK Sessions Section</option>
+          <option>MSK Virtual Ergonomic</option><option>Care Pack</option><option>Reminders</option>
+          <option>Sara Bot</option><option>Benefits Card</option><option>RICE</option>
+          <option>Video Visits</option><option>Profile</option><option>Progress Check-In</option><option>QA</option>
+        </select>
+      </label>
+      <div style="margin-left:auto;position:relative;" id="date-filter-wrap">
+        <button class="fb-date-btn" id="date-range-wrap" onclick="toggleDatePopover(event)">
+          <i class="ti ti-calendar"></i>
+          <span id="date-btn-label">Date range</span>
+          <i class="ti ti-chevron-down fp-chevron" style="font-size:10px;color:var(--grey3);"></i>
+        </button>
+        <div class="date-popover" id="date-popover">
+          <div class="date-popover-row">
+            <label>From</label>
+            <input type="date" id="filter-date-from" onchange="updateDateActive();renderFeed()">
+          </div>
+          <div class="date-popover-row">
+            <label>To</label>
+            <input type="date" id="filter-date-to" onchange="updateDateActive();renderFeed()">
+          </div>
+          <div class="date-popover-actions">
+            <button class="btn btn-ghost btn-sm" onclick="clearDateFilter()">Clear</button>
+            <button class="btn btn-primary btn-sm" onclick="closeDatePopover()">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="feed-stats" id="feed-stats"></div>
+    <div id="feed-list"><div class="empty-state"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i><p>Loading...</p></div></div>
+  </main>
+</div>
+
+<!-- DELETE ENTRY MODAL -->
+<div class="modal-overlay" id="del-entry-modal">
+  <div class="modal">
+    <div class="modal-title">Delete this entry?</div>
+    <div class="modal-sub">This removes the entry and all its changes permanently.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteEntry()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CHANGE MODAL -->
+<div class="modal-overlay" id="del-change-modal">
+  <div class="modal">
+    <div class="modal-title">Delete this change?</div>
+    <div class="modal-sub">This individual change will be removed from the entry.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteChange()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE CATEGORIES MODAL -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal" style="width:520px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div class="modal-title" style="margin-bottom:0;">Manage Categories</div>
+      <button class="action-btn" onclick="closeModals()" style="opacity:1;"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:13px;color:var(--grey1);margin-bottom:14px;line-height:1.5;">Add or remove categories from the suggestion list.</p>
+    <div class="modal-scroll" id="cat-list"></div>
+    <div class="cat-add-row">
+      <input type="text" id="new-cat-input" placeholder="Add a new category..." maxlength="80" onkeydown="if(event.key==='Enter') addCategory()">
+      <button class="btn btn-primary btn-sm" onclick="addCategory()"><i class="ti ti-plus"></i> Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMAGE LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close"><i class="ti ti-x"></i></button>
+  <img id="lightbox-img" src="" alt="Change preview">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://zhdynyxpscwlqhpgzwcy.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZHlueXhwc2N3bHFocGd6d2N5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTIwNzksImV4cCI6MjA5NzE4ODA3OX0.Eg7EZSzW7XHBWglqH2jnDT-sX3M0KaUE3U_USk0NT3k';
+const REST = SUPABASE_URL + '/rest/v1';
+const STORAGE = SUPABASE_URL + '/storage/v1/object/changelog-images';
+const STORAGE_PUBLIC = SUPABASE_URL + '/storage/v1/object/public/changelog-images';
+const H = { 'Content-Type':'application/json', 'apikey':ANON_KEY, 'Authorization':'Bearer '+ANON_KEY, 'Prefer':'return=representation' };
+const CAT_KEY = 'st_cats_v2';
+
+let allEntries = [];
+let changeItems = [];
+let selectedType = '';
+let deleteEntryTarget = null;
+let deleteChangeTarget = null;
+let changeItemCounter = 0;
+
+function today() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+async function sbFetch(url, opts={}) {
+  const res = await fetch(url, {...opts, headers:{...H,...(opts.headers||{})}});
+  if (!res.ok) throw new Error('HTTP '+res.status+': '+await res.text());
+  const t = await res.text(); return t ? JSON.parse(t) : [];
+}
+
+function setSync(state, label) {
+  document.getElementById('sync-dot').className = 'sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
+  document.getElementById('sync-label').textContent = label;
+}
+
+// ── LOAD ──
+async function loadEntries() {
+  setSync('syncing','Loading...');
+  try {
+    const entries = await sbFetch(REST+'/changelog?select=*&order=created_at.desc');
+    const changes = await sbFetch(REST+'/changelog_changes?select=*&order=created_at.asc');
+    allEntries = entries.map(e => ({...e, changes: changes.filter(c => c.entry_id === e.id)}));
+    renderFeed();
+    setSync('ok','Live');
+  } catch(e) {
+    console.error(e);
+    setSync('error','Connection error');
+    document.getElementById('feed-list').innerHTML = `<div class="empty-state"><i class="ti ti-wifi-off"></i><p>Could not connect</p><span style="font-size:13px;color:var(--grey2)">${e.message}</span></div>`;
+  }
+}
+
+// ── FORM ──
+function initForm() {
+  changeItems = [];
+  changeItemCounter = 0;
+  document.getElementById('changes-form-list').innerHTML = '';
+  addChangeItem();
+  document.getElementById('e-date').value = today();
+}
+
+function addChangeItem() {
+  const id = ++changeItemCounter;
+  changeItems.push({ id, desc:'', figma:'', imageFile:null, imageDataUrl:null });
+  renderChangeItems();
+}
+
+function removeChangeItem(id) {
+  if (changeItems.length === 1) { showToast('Need at least one change', 'ti-alert-circle'); return; }
+  changeItems = changeItems.filter(c => c.id !== id);
+  renderChangeItems();
+}
+
+function renderChangeItems() {
+  document.getElementById('change-count-badge').textContent = changeItems.length;
+  document.getElementById('changes-form-list').innerHTML = changeItems.map((c, idx) => `
+    <div class="change-item-form" id="cif-${c.id}">
+      <div class="change-item-num">Change ${idx+1}</div>
+      ${changeItems.length > 1 ? `<button class="change-item-remove" onclick="removeChangeItem(${c.id})"><i class="ti ti-x"></i></button>` : ''}
+      <div class="form-group" style="margin-bottom:8px;">
+        <textarea placeholder="What changed? Be specific..." rows="2" style="min-height:60px;" oninput="updateChangeField(${c.id},'desc',this.value)">${esc(c.desc)}</textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <input type="url" placeholder="Figma link (optional)" value="${esc(c.figma)}" oninput="updateChangeField(${c.id},'figma',this.value)">
+      </div>
+      <div class="img-upload-area ${c.imageDataUrl ? 'has-image' : ''}" id="img-area-${c.id}"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDrop(event,${c.id})">
+        ${c.imageDataUrl
+          ? `<img class="img-preview" src="${c.imageDataUrl}" alt="preview"><button class="img-remove-btn" onclick="removeImage(event,${c.id})"><i class="ti ti-x"></i></button>`
+          : `<div class="upload-hint"><i class="ti ti-photo"></i>Click to upload or drag image</div>`
+        }
+        ${!c.imageDataUrl ? `<input type="file" accept="image/*" onchange="handleFileSelect(event,${c.id})">` : ''}
+      </div>
+      <p class="paste-hint">or press <kbd>⌘V</kbd> / <kbd>Ctrl+V</kbd> to paste a screenshot</p>
+    </div>`).join('');
+}
+
+function updateChangeField(id, field, val) {
+  const item = changeItems.find(c => c.id === id);
+  if (item) item[field] = val;
+}
+
+function handleFileSelect(e, id) {
+  const file = e.target.files[0];
+  if (file) setImageForItem(id, file);
+}
+
+function handleDrop(e, id) {
+  e.preventDefault();
+  document.getElementById('img-area-'+id).classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) setImageForItem(id, file);
+}
+
+function setImageForItem(id, file) {
+  const item = changeItems.find(c => c.id === id);
+  if (!item) return;
+  item.imageFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => { item.imageDataUrl = ev.target.result; renderChangeItems(); };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(e, id) {
+  e.stopPropagation();
+  const item = changeItems.find(c => c.id === id);
+  if (item) { item.imageFile = null; item.imageDataUrl = null; renderChangeItems(); }
+}
+
+// Paste handler — paste image into the first unfilled change item
+document.addEventListener('paste', e => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      // Find first change item without an image
+      const target = changeItems.find(c => !c.imageFile) || changeItems[changeItems.length - 1];
+      if (target) {
+        setImageForItem(target.id, file);
+        showToast('Screenshot pasted into Change '+(changeItems.indexOf(target)+1));
+      }
+      break;
+    }
+  }
+});
+
+async function uploadImage(file, entryId, changeIdx) {
+  const ext = file.name.split('.').pop() || 'png';
+  const path = `${entryId}/${changeIdx}-${Date.now()}.${ext}`;
+  const res = await fetch(`${STORAGE}/${path}`, {
+    method: 'POST',
+    headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer '+ANON_KEY, 'Content-Type': file.type, 'x-upsert': 'true' },
+    body: file
+  });
+  if (!res.ok) throw new Error('Image upload failed: '+await res.text());
+  return `${STORAGE_PUBLIC}/${path}`;
+}
+
+async function submitEntry() {
+  const title = document.getElementById('e-title').value.trim();
+  const category = document.getElementById('e-category').value.trim();
+  if (!title) { flashField('e-title'); return; }
+  if (!selectedType) { showToast('Pick a change type', 'ti-alert-circle'); return; }
+  if (!category) { flashField('e-category'); return; }
+  const validChanges = changeItems.filter(c => c.desc.trim());
+  if (!validChanges.length) { showToast('Add at least one change description', 'ti-alert-circle'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Saving...';
+
+  try {
+    const entryRow = {
+      title, type: selectedType, category,
+      rationale: document.getElementById('e-rationale').value.trim() || null,
+      author: document.getElementById('e-author').value.trim() || 'Haley',
+      date: document.getElementById('e-date').value || today(),
+      version: null
+    };
+    const created = await sbFetch(REST+'/changelog', { method:'POST', body:JSON.stringify(entryRow) });
+    const entry = Array.isArray(created) ? created[0] : created;
+
+    for (let i = 0; i < validChanges.length; i++) {
+      const c = validChanges[i];
+      let imageUrl = null;
+      if (c.imageFile) {
+        try { imageUrl = await uploadImage(c.imageFile, entry.id, i); } catch(e) { console.warn('Image upload failed', e); }
+      }
+      await sbFetch(REST+'/changelog_changes', {
+        method:'POST',
+        body:JSON.stringify({ entry_id:entry.id, description:c.desc.trim(), figma:c.figma.trim()||null, image_url:imageUrl })
+      });
+    }
+
+    await loadEntries();
+    resetForm();
+    showToast('Entry saved');
+    document.getElementById('feed-panel').scrollTop = 0;
+  } catch(e) {
+    console.error(e);
+    showToast('Error saving: '+e.message, 'ti-alert-circle');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-check"></i> Save Entry';
+  }
+}
+
+function resetForm() {
+  document.getElementById('e-title').value = '';
+  document.getElementById('e-rationale').value = '';
+  document.getElementById('e-category').value = '';
+  document.getElementById('e-author').value = '';
+  document.getElementById('title-count').textContent = '0 / 120';
+  selectedType = '';
+  document.querySelectorAll('.type-pill').forEach(p => p.className = 'type-pill');
+  initForm();
+}
+
+// ── INLINE ADD CHANGE TO EXISTING ENTRY ──
+function openAddChange(entryId) {
+  closeAllAddChangeForms();
+  const el = document.getElementById('add-change-inline-'+entryId);
+  if (el) el.classList.add('open');
+}
+
+function closeAllAddChangeForms() {
+  document.querySelectorAll('.add-change-inline').forEach(el => el.classList.remove('open'));
+}
+
+async function saveInlineChange(entryId) {
+  const desc = document.getElementById('inline-desc-'+entryId).value.trim();
+  if (!desc) { showToast('Add a description', 'ti-alert-circle'); return; }
+  const figma = document.getElementById('inline-figma-'+entryId).value.trim();
+  const imgInput = document.getElementById('inline-img-'+entryId);
+  const pasteArea = document.getElementById('inline-paste-'+entryId);
+
+  const btn = document.getElementById('inline-save-'+entryId);
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  try {
+    let imageUrl = null;
+    const file = imgInput?.files[0] || (pasteArea?._pastedFile);
+    if (file) {
+      try { imageUrl = await uploadImage(file, entryId, Date.now()); } catch(e) { console.warn(e); }
+    }
+    await sbFetch(REST+'/changelog_changes', {
+      method:'POST',
+      body:JSON.stringify({ entry_id:entryId, description:desc, figma:figma||null, image_url:imageUrl })
+    });
+    await loadEntries();
+    showToast('Change added');
+  } catch(e) {
+    showToast('Error: '+e.message, 'ti-alert-circle');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+// ── RENDER FEED ──
+function renderFeed() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const fType  = document.getElementById('filter-type').value;
+  const fCat   = document.getElementById('filter-category').value;
+  const fFrom  = document.getElementById('filter-date-from').value;
+  const fTo    = document.getElementById('filter-date-to').value;
+  const clearBtn = document.getElementById('clear-date-btn');
+  if (clearBtn) clearBtn.style.display = (fFrom||fTo) ? 'inline-flex' : 'none';
+
+  const filtered = allEntries.filter(e => {
+    const d = (e.date||e.created_at||'').slice(0,10);
+    return (!search || (e.title||'').toLowerCase().includes(search) || (e.rationale||'').toLowerCase().includes(search) || (e.category||'').toLowerCase().includes(search) || (e.changes||[]).some(c=>(c.description||'').toLowerCase().includes(search))) &&
+      (!fType || e.type===fType) && (!fCat || e.category===fCat) &&
+      (!fFrom || d>=fFrom) && (!fTo || d<=fTo);
+  });
+
+  const counts = {Component:0,Flow:0,Screen:0,Decision:0};
+  allEntries.forEach(e => { if(counts[e.type]!==undefined) counts[e.type]++; });
+  document.getElementById('feed-stats').innerHTML = `
+    <div class="stat-chip"><strong>${allEntries.length}</strong> entries</div>
+    <div class="stat-chip"><strong>${allEntries.reduce((s,e)=>s+(e.changes||[]).length,0)}</strong> changes</div>
+    <div class="stat-chip"><strong>${counts.Component}</strong> components</div>
+    <div class="stat-chip"><strong>${counts.Flow}</strong> flows</div>
+    <div class="stat-chip"><strong>${counts.Screen}</strong> screens</div>
+    <div class="stat-chip"><strong>${counts.Decision}</strong> decisions</div>`;
+
+  if (!filtered.length) {
+    document.getElementById('feed-list').innerHTML = `<div class="empty-state"><i class="ti ti-file-description"></i><p>No entries found</p><span>${allEntries.length?'Adjust filters.':'Log your first change using the form.'}</span></div>`;
+    return;
+  }
+
+  const tagCls = {Component:'tag-component',Flow:'tag-flow',Screen:'tag-screen',Decision:'tag-decision'};
+  document.getElementById('feed-list').innerHTML = filtered.map(e => {
+    const d = (e.date||e.created_at||'').slice(0,10);
+    const changes = e.changes || [];
+    return `
+    <div class="entry-card" data-type="${esc(e.type)}">
+      <div class="entry-header">
+        <div class="entry-top">
+          <span class="entry-tag ${tagCls[e.type]||'tag-decision'}">${esc(e.type)}</span>
+          <div class="entry-title">${esc(e.title)}</div>
+          <div class="entry-header-actions">
+            <button class="action-btn delete" title="Delete entry" onclick="deleteEntry('${e.id}')"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+        <div class="entry-meta">
+          <span class="category-badge">${esc(e.category)}</span>
+          ${e.author?`<span class="entry-meta-item"><i class="ti ti-user"></i>${esc(e.author)}</span>`:''}
+          ${d?`<span class="entry-meta-item"><i class="ti ti-calendar"></i>${fmtDate(d)}</span>`:''}
+          <span class="entry-meta-item"><i class="ti ti-list-check"></i>${changes.length} change${changes.length!==1?'s':''}</span>
+        </div>
+        ${e.rationale?`<div class="entry-rationale">${esc(e.rationale)}</div>`:''}
+      </div>
+      <div class="changes-list">
+        ${changes.length ? `<div class="changes-list-header">
+          <span style="width:20px;flex-shrink:0;">#</span>
+          <span style="flex:1;">Description</span>
+          <span style="width:56px;flex-shrink:0;text-align:center;">Preview</span>
+          <span style="width:80px;flex-shrink:0;">Link</span>
+          <span style="width:28px;flex-shrink:0;"></span>
+        </div>` : ''}
+        ${changes.map((c,i) => `
+          <div class="change-row">
+            <div class="change-index">${i+1}</div>
+            <div class="change-body">
+              <div class="change-text">
+                <div class="change-desc" title="${esc(c.description)}">${esc(c.description)}</div>
+              </div>
+              ${c.image_url?`<div class="change-img-wrap" onclick="openLightbox('${esc(c.image_url)}')"><img class="change-img" src="${esc(c.image_url)}" alt="" loading="lazy"><div class="img-expand-hint"><i class="ti ti-arrows-maximize"></i></div></div>`:`<div style="width:56px;flex-shrink:0;"></div>`}
+              ${c.figma?`<a class="change-figma" href="${esc(c.figma)}" target="_blank" rel="noopener" style="width:80px;"><i class="ti ti-brand-figma"></i>Figma</a>`:`<div style="width:80px;flex-shrink:0;"></div>`}
+            </div>
+            <div class="change-row-actions" style="opacity:0;transition:opacity 0.15s;flex-shrink:0;">
+              <button class="action-btn delete" title="Delete" onclick="deleteChange('${c.id}')"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="add-change-bar">
+        <button class="btn btn-ghost btn-sm" onclick="openAddChange('${e.id}')">
+          <i class="ti ti-plus"></i> Add change
+        </button>
+      </div>
+      <div class="add-change-inline" id="add-change-inline-${e.id}">
+        <div class="form-group" style="margin-bottom:8px;">
+          <textarea id="inline-desc-${e.id}" placeholder="Describe this change..." rows="2" style="min-height:56px;"></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <input type="url" id="inline-figma-${e.id}" placeholder="Figma link (optional)">
+        </div>
+        <div class="img-upload-area" id="inline-img-area-${e.id}"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleInlineDrop(event,'${e.id}')">
+          <div class="upload-hint"><i class="ti ti-photo"></i>Click to upload or drag image</div>
+          <input type="file" accept="image/*" id="inline-img-${e.id}" onchange="handleInlineFileSelect(event,'${e.id}')">
+        </div>
+        <p class="paste-hint">or <kbd>⌘V</kbd> to paste a screenshot</p>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn btn-primary btn-sm" id="inline-save-${e.id}" onclick="saveInlineChange('${e.id}')">Save</button>
+          <button class="btn btn-ghost btn-sm" onclick="closeAllAddChangeForms()">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Inline image handling
+function handleInlineFileSelect(e, entryId) {
+  const file = e.target.files[0];
+  if (file) setInlineImage(entryId, file);
+}
+
+function handleInlineDrop(e, entryId) {
+  e.preventDefault();
+  document.getElementById('inline-img-area-'+entryId)?.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) setInlineImage(entryId, file);
+}
+
+function setInlineImage(entryId, file) {
+  const area = document.getElementById('inline-img-area-'+entryId);
+  if (!area) return;
+  area._pastedFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    area.classList.add('has-image');
+    area.innerHTML = `<img class="img-preview" src="${ev.target.result}" alt="preview"><button class="img-remove-btn" onclick="clearInlineImage('${entryId}',event)"><i class="ti ti-x"></i></button>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearInlineImage(entryId, e) {
+  e.stopPropagation();
+  const area = document.getElementById('inline-img-area-'+entryId);
+  if (area) {
+    area._pastedFile = null;
+    area.classList.remove('has-image');
+    area.innerHTML = `<div class="upload-hint"><i class="ti ti-photo"></i>Click to upload or drag image</div><input type="file" accept="image/*" id="inline-img-${entryId}" onchange="handleInlineFileSelect(event,'${entryId}')">`;
+  }
+}
+
+// Paste into inline forms
+document.addEventListener('paste', e => {
+  const openForms = document.querySelectorAll('.add-change-inline.open');
+  if (!openForms.length) return;
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      const form = openForms[0];
+      const entryId = form.id.replace('add-change-inline-','');
+      setInlineImage(entryId, file);
+      showToast('Screenshot pasted');
+      break;
+    }
+  }
+});
+
+// ── DELETE ──
+function deleteEntry(id) { deleteEntryTarget = id; document.getElementById('del-entry-modal').classList.add('open'); }
+async function confirmDeleteEntry() {
+  try {
+    await sbFetch(REST+'/changelog?id=eq.'+deleteEntryTarget, {method:'DELETE', headers:{...H,'Prefer':'return=minimal'}});
+    allEntries = allEntries.filter(e => e.id !== deleteEntryTarget);
+    renderFeed(); closeModals(); showToast('Entry deleted','ti-trash');
+  } catch(e) { showToast('Error: '+e.message,'ti-alert-circle'); closeModals(); }
+}
+
+function deleteChange(id) { deleteChangeTarget = id; document.getElementById('del-change-modal').classList.add('open'); }
+async function confirmDeleteChange() {
+  try {
+    await sbFetch(REST+'/changelog_changes?id=eq.'+deleteChangeTarget, {method:'DELETE', headers:{...H,'Prefer':'return=minimal'}});
+    allEntries = allEntries.map(e => ({...e, changes:(e.changes||[]).filter(c=>c.id!==deleteChangeTarget)}));
+    renderFeed(); closeModals(); showToast('Change deleted','ti-trash');
+  } catch(e) { showToast('Error: '+e.message,'ti-alert-circle'); closeModals(); }
+}
+
+function closeModals() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+  deleteEntryTarget = null; deleteChangeTarget = null;
+}
+
+// ── CATEGORIES ──
+const DEFAULT_CATS = ['Registration','Onboarding','Onboarding → For Muscle and Joint Pain Relief','Onboarding → For Work and Life Prevention','Onboarding → For Rehabilitation + Lifestyle and Maintenance','Onboarding → For Pelvic Health','Care Plan Section','Care Plan Section → Care Plan Generation (Animation)','Care Plan Section → Care Plan Generated','Dashboard','Dashboard → Manage Dashboard','Dashboard → Clinical Red Flags (WIP)','MSK Programs','MSK Programs → Manage Programs','MSK Programs → Add New/Recommended Program','MSK Sessions Section','MSK Sessions Section → Complete User Flow','MSK Sessions Section → In-Session','MSK Sessions Section → My Journey','MSK Sessions Section → Session History','MSK Sessions Section → Download Session Offline','MSK Sessions Section → Post Session','MSK Sessions Section → ADLS','MSK Sessions Section → Edge Cases','MSK Virtual Ergonomic','MSK Virtual Ergonomic → Pre VErgo Meet (Assessment)','MSK Virtual Ergonomic → In-VErgo Meet','Care Pack','Reminders','Sara Bot','Benefits Card','RICE','RICE → RICE Onboarding','RICE → RICE Day to Day Triggers','RICE → Manage RICE','Video Visits','Video Visits → Onboarding Video Visit','Video Visits → Chat with Coach','Profile','Progress Check-In','Progress Check-In → 30 & 90 Days','Progress Check-In → 60 & 120 Days','QA'];
+
+function getCategories() {
+  try { const s = localStorage.getItem(CAT_KEY); if(s) return JSON.parse(s); } catch(e) {}
+  return [...DEFAULT_CATS];
+}
+function saveCategories(cats) { localStorage.setItem(CAT_KEY, JSON.stringify(cats)); }
+
+function filterSuggestions(val) {
+  const box = document.getElementById('cat-dropdown');
+  const q = val.trim().toLowerCase();
+  const cats = getCategories();
+  const show = q ? cats.filter(c=>c.toLowerCase().includes(q)) : cats;
+  if (!show.length) { box.style.display='none'; return; }
+  box.innerHTML = show.map(c=>`<div class="cat-option" onmousedown="pickCategory('${c.replace(/'/g,"\\'")}')">${hlCat(c,q)}</div>`).join('');
+  box.style.display = 'block';
+}
+
+function hlCat(text, q) {
+  if (!q) return esc(text);
+  const i = text.toLowerCase().indexOf(q);
+  if (i===-1) return esc(text);
+  return esc(text.slice(0,i))+'<strong>'+esc(text.slice(i,i+q.length))+'</strong>'+esc(text.slice(i+q.length));
+}
+
+function pickCategory(val) {
+  document.getElementById('e-category').value = val;
+  hideSuggestions();
+}
+
+function hideSuggestions() {
+  setTimeout(()=>{ const b=document.getElementById('cat-dropdown'); if(b) b.style.display='none'; }, 150);
+}
+
+function openManageCategories() {
+  renderCatList();
+  document.getElementById('cat-modal').classList.add('open');
+}
+
+function renderCatList() {
+  const cats = getCategories();
+  document.getElementById('cat-list').innerHTML = cats.length
+    ? cats.map((c,i)=>`<div class="cat-manage-row"><span class="cat-manage-name">${esc(c)}</span><button class="cat-manage-del" onclick="deleteCategory(${i})"><i class="ti ti-trash"></i></button></div>`).join('')
+    : '<p style="font-size:13px;color:var(--grey2);padding:8px 0;">No categories yet.</p>';
+}
+
+function addCategory() {
+  const input = document.getElementById('new-cat-input');
+  const val = input.value.trim();
+  if (!val) return;
+  const cats = getCategories();
+  if (cats.includes(val)) { showToast('Already exists','ti-alert-circle'); return; }
+  cats.push(val);
+  saveCategories(cats);
+  input.value = '';
+  renderCatList();
+  showToast('Category added');
+}
+
+function deleteCategory(idx) {
+  const cats = getCategories();
+  cats.splice(idx,1);
+  saveCategories(cats);
+  renderCatList();
+  showToast('Removed','ti-trash');
+}
+
+// ── DATE FILTER ──
+function clearDateFilter() {
+  document.getElementById('filter-date-from').value='';
+  document.getElementById('filter-date-to').value='';
+  document.getElementById('clear-date-btn').style.display='none';
+  renderFeed();
+}
+
+// ── LIGHTBOX ──
+function openLightbox(url) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+
+// ── TYPE SELECT ──
+function selectType(el) {
+  document.querySelectorAll('.type-pill').forEach(p=>p.className='type-pill');
+  selectedType = el.dataset.type;
+  el.classList.add('selected-'+selectedType.toLowerCase());
+}
+
+// ── HELPERS ──
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(d){ if(!d) return ''; const [y,m,day]=d.split('-'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+parseInt(day)+', '+y; }
+function flashField(id){ const el=document.getElementById(id); el.style.borderColor='var(--red)'; setTimeout(()=>el.style.borderColor='',1500); showToast('Required field','ti-alert-circle'); }
+function showToast(msg,icon='ti-check'){ const t=document.getElementById('toast'); t.innerHTML=`<i class="ti ${icon}"></i> ${msg}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+
+// ── PDF EXPORT ──
+function exportPDF() {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210, M=16, CW=W-M*2;
+  let y=20;
+
+  const fType=document.getElementById('filter-type').value;
+  const fCat=document.getElementById('filter-category').value;
+  const search=document.getElementById('search-input').value.toLowerCase();
+  const filtered=allEntries.filter(e=>(!search||(e.title||'').toLowerCase().includes(search))&&(!fType||e.type===fType)&&(!fCat||e.category===fCat));
+
+  doc.setFontSize(20);doc.setFont('helvetica','bold');doc.setTextColor(0,27,54);
+  doc.text('ST Design Changelog',M,y); y+=7;
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(132,150,168);
+  doc.text(`SimpleTherapy   ·   Exported ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}   ·   ${filtered.length} entries`,M,y); y+=4;
+  doc.setDrawColor(199,207,217);doc.setLineWidth(0.3);doc.line(M,y+1,W-M,y+1); y+=7;
+
+  const typeColors={Component:[13,110,153],Flow:[92,31,160],Screen:[181,66,0],Decision:[6,132,90]};
+
+  filtered.forEach((e,ei)=>{
+    const titleLines=doc.splitTextToSize(e.title||'',CW-26);
+    const rLines=e.rationale?doc.splitTextToSize(e.rationale,CW):[];
+    const chLines=(e.changes||[]).reduce((s,c)=>s+doc.splitTextToSize('• '+(c.description||''),CW-4).length,0);
+    const blockH=8+titleLines.length*5.5+(rLines.length?rLines.length*4+3:0)+(chLines*4.5)+8;
+    if(y+blockH>277){doc.addPage();y=16;}
+
+    const col=typeColors[e.type]||[82,99,118];
+    doc.setFillColor(...col);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
+    const tw=doc.getTextWidth((e.type||'').toUpperCase())+6;
+    doc.roundedRect(M,y-3.5,tw,5.5,1.5,1.5,'F');
+    doc.text((e.type||'').toUpperCase(),M+3,y+0.5);
+
+    doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(0,27,54);
+    doc.text(titleLines,M+tw+4,y); y+=titleLines.length*5.5+1;
+
+    doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(132,150,168);
+    const meta=[e.category,e.author,e.date?fmtDate(e.date.slice(0,10)):''].filter(Boolean).join('   ·   ');
+    doc.text(meta,M,y); y+=5;
+
+    if(rLines.length){doc.setFontSize(9.5);doc.setTextColor(82,99,118);doc.text(rLines,M,y);y+=rLines.length*4+2;}
+
+    (e.changes||[]).forEach((c,ci)=>{
+      const cl=doc.splitTextToSize(`${ci+1}. ${c.description||''}`,CW-4);
+      if(y+cl.length*4.5>277){doc.addPage();y=16;}
+      doc.setFontSize(9.5);doc.setFont('helvetica','normal');doc.setTextColor(0,27,54);
+      doc.text(cl,M+4,y); y+=cl.length*4.5;
+      if(c.figma){doc.setFontSize(8);doc.setTextColor(30,165,222);doc.text('↗ Figma',M+8,y);doc.link(M+8,y-3,16,4,{url:c.figma});y+=4;}
+      if(c.image_url){doc.setFontSize(8);doc.setTextColor(132,150,168);doc.text('[image attached — view online]',M+8,y);y+=4;}
+    });
+
+    if(ei<filtered.length-1){doc.setDrawColor(236,242,246);doc.setLineWidth(0.3);doc.line(M,y+2,W-M,y+2);y+=7;}
+  });
+
+  doc.save('st-changelog-'+today()+'.pdf');
+  showToast('PDF exported');
+}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModals();closeAllAddChangeForms();closeLightbox();}
+});
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)closeModals();}));
+document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===this)closeLightbox();});
+document.getElementById('e-title').addEventListener('input',function(){document.getElementById('title-count').textContent=this.value.length+' / 120';});
+
+// ── FILTER HELPERS ──
+  function toggleDatePopover(e) {
+    e.stopPropagation();
+    document.getElementById('date-popover').classList.toggle('open');
+  }
+  function closeDatePopover() {
+    document.getElementById('date-popover').classList.remove('open');
+  }
+  document.addEventListener('click', function(e) {
+    const w = document.getElementById('date-filter-wrap');
+    if (w && !w.contains(e.target)) closeDatePopover();
+  });
+  function fmtDateShort(d) {
+    if (!d) return '';
+    const [y,m,day] = d.split('-');
+    return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+parseInt(day);
+  }
+  function updateDateActive() {
+    const from = document.getElementById('filter-date-from').value;
+    const to   = document.getElementById('filter-date-to').value;
+    const btn  = document.getElementById('date-range-wrap');
+    const lbl  = document.getElementById('date-btn-label');
+    if (btn) btn.classList.toggle('active', !!(from||to));
+    if (lbl) {
+      if (from && to) lbl.textContent = fmtDateShort(from)+' – '+fmtDateShort(to);
+      else if (from)  lbl.textContent = 'From '+fmtDateShort(from);
+      else if (to)    lbl.textContent = 'To '+fmtDateShort(to);
+      else            lbl.textContent = 'Date range';
+    }
+  }
+  function updatePill(key, sel) {
+    const pill = document.getElementById('pill-'+key);
+    const lbl  = document.getElementById('pill-'+key+'-label');
+    if (!pill||!lbl) return;
+    if (sel.value) { pill.classList.add('active'); lbl.textContent = sel.value.length>14 ? sel.value.slice(0,13)+'…' : sel.value; }
+    else           { pill.classList.remove('active'); lbl.textContent = key==='type'?'Type':'Page'; }
+  }
+
+// ── INIT ──
+initForm();
+loadEntries();
+</script>
+</body>
+</html>
